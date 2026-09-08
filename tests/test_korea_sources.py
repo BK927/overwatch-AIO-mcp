@@ -42,29 +42,95 @@ def hydration(route, payload):
 
 
 def overview():
-    measurement = {"hero": {"slug": "reinhardt", "role": "TANK"}, "region": "KOREA", "tier": "MASTER", "mode": "COMPETITIVE", "season": SEASON, "winRate": 51.2, "pickRate": 4.3, "banRate": 0.5}
-    return {"statistics": {"heroesRatesOverview": {"filter": {"region": "KOREA", "tier": "MASTER", "mode": "COMPETITIVE", "season": SEASON}, "result": {"metaStandings": [{"measurement": measurement}]}}}}
+    measurement = {
+        "hero": {"slug": "reinhardt", "role": "TANK"},
+        "region": "KOREA",
+        "tier": "MASTER",
+        "mode": "COMPETITIVE",
+        "season": SEASON,
+        "winRate": 51.2,
+        "pickRate": 4.3,
+        "banRate": 0.5,
+    }
+    return {
+        "statistics": {
+            "heroesRatesOverview": {
+                "filter": {
+                    "region": "KOREA",
+                    "tier": "MASTER",
+                    "mode": "COMPETITIVE",
+                    "season": SEASON,
+                },
+                "result": {"metaStandings": [{"measurement": measurement}]},
+            }
+        }
+    }
 
 
 def map_payload():
-    return {"region": "KOREA", "data": {"mapBySlug": {"slug": "kings-row", "heroRates": {"filter": {"region": None, "tier": "MASTER", "season": SEASON}, "result": {"measurements": [
-        {"hero": {"slug": "reinhardt", "role": "TANK"}, "region": "ASIA", "winRate": 90, "pickRate": 20},
-        {"hero": {"slug": "reinhardt", "role": "TANK"}, "region": "KOREA", "winRate": 45, "pickRate": 5},
-    ]}}}}, "catalog": {"combos": [{"region": "KOREA", "tier": "MASTER", "mode": "COMPETITIVE", "season": SEASON, "grains": ["BY_MAP"]}]}}
+    return {
+        "region": "KOREA",
+        "data": {
+            "mapBySlug": {
+                "slug": "kings-row",
+                "heroRates": {
+                    "filter": {"region": None, "tier": "MASTER", "season": SEASON},
+                    "result": {
+                        "measurements": [
+                            {
+                                "hero": {"slug": "reinhardt", "role": "TANK"},
+                                "region": "ASIA",
+                                "winRate": 90,
+                                "pickRate": 20,
+                            },
+                            {
+                                "hero": {"slug": "reinhardt", "role": "TANK"},
+                                "region": "KOREA",
+                                "winRate": 45,
+                                "pickRate": 5,
+                            },
+                        ]
+                    },
+                },
+            }
+        },
+        "catalog": {
+            "combos": [
+                {
+                    "region": "KOREA",
+                    "tier": "MASTER",
+                    "mode": "COMPETITIVE",
+                    "season": SEASON,
+                    "grains": ["BY_MAP"],
+                }
+            ]
+        },
+    }
 
 
 class TextClient:
     def __init__(self, payload=None, *, map_view=False, html=None):
-        self.html = html if html is not None else hydration("app/routes/map.$slug" if map_view else "app/routes/hero", payload if payload is not None else overview())
+        self.html = (
+            html
+            if html is not None
+            else hydration(
+                "app/routes/map.$slug" if map_view else "app/routes/hero",
+                payload if payload is not None else overview(),
+            )
+        )
         self.calls = []
 
     async def get_text(self, source, url, params=None, ttl=0):
         self.calls.append((source, url, params, ttl))
-        return SimpleNamespace(data=self.html, url=url, retrieved_at=FETCHED, cached=False, stale=False)
+        return SimpleNamespace(
+            data=self.html, url=url, retrieved_at=FETCHED, cached=False, stale=False
+        )
 
 
 def run_meta(client=None, **filters):
-    return asyncio.run(OwticsAdapter(client or TextClient()).meta({"region": "KR", "tier": "MASTER", **filters}))
+    return asyncio.run(
+        OwticsAdapter(client or TextClient()).meta({"region": "KR", "tier": "MASTER", **filters})
+    )
 
 
 def test_owtics_verified_korea_and_percent_without_match_server_inference():
@@ -89,7 +155,17 @@ def test_owtics_map_selects_explicit_region_in_mixed_payload():
     assert result.applied_filters["season"] == SEASON
 
 
-@pytest.mark.parametrize("filters", [{"tier": "GRANDMASTER"}, {"tier": "CHAMPION"}, {"platform": "console"}, {"match_server_region": "KR"}, {"region": "INVALID"}, {"mode": "quickplay", "map": "kings-row"}])
+@pytest.mark.parametrize(
+    "filters",
+    [
+        {"tier": "GRANDMASTER"},
+        {"tier": "CHAMPION"},
+        {"platform": "console"},
+        {"match_server_region": "KR"},
+        {"region": "INVALID"},
+        {"mode": "quickplay", "map": "kings-row"},
+    ],
+)
 def test_owtics_rejects_unverified_filters_before_request(filters):
     client = TextClient()
     with pytest.raises(SourceError) as caught:
@@ -108,7 +184,9 @@ def test_owtics_filter_echo_mismatch_does_not_return_wrong_population():
 
 def test_owtics_measurement_mismatch_is_parse_failure():
     payload = overview()
-    payload["statistics"]["heroesRatesOverview"]["result"]["metaStandings"][0]["measurement"]["tier"] = "ALL"
+    payload["statistics"]["heroesRatesOverview"]["result"]["metaStandings"][0]["measurement"][
+        "tier"
+    ] = "ALL"
     with pytest.raises(SourceError) as caught:
         run_meta(TextClient(payload))
     assert caught.value.code == "PARSE_ERROR"
@@ -117,7 +195,9 @@ def test_owtics_measurement_mismatch_is_parse_failure():
 @pytest.mark.parametrize("value", [101, float("nan"), True, "55%"])
 def test_owtics_malformed_percent_is_not_zero(value):
     payload = overview()
-    payload["statistics"]["heroesRatesOverview"]["result"]["metaStandings"][0]["measurement"]["winRate"] = value
+    payload["statistics"]["heroesRatesOverview"]["result"]["metaStandings"][0]["measurement"][
+        "winRate"
+    ] = value
     with pytest.raises(SourceError) as caught:
         run_meta(TextClient(payload))
     assert caught.value.code == "PARSE_ERROR"
@@ -131,7 +211,7 @@ def test_owtics_missing_measurement_and_unknown_hero_are_different():
 
 
 def test_owtics_does_not_execute_javascript_or_follow_circular_references():
-    html = '<script>window.__reactRouterContext.streamController.enqueue("[{\\\"_1\\\":2},\\\"loaderData\\\",{\\\"_3\\\":4},\\\"app/routes/hero\\\",{\\\"_5\\\":4},\\\"loop\\\"]")</script>'
+    html = '<script>window.__reactRouterContext.streamController.enqueue("[{\\"_1\\":2},\\"loaderData\\",{\\"_3\\":4},\\"app/routes/hero\\",{\\"_5\\":4},\\"loop\\"]")</script>'
     with pytest.raises(SourceError) as caught:
         decode_loader(html, "app/routes/hero", "https://owtics.gg/en-US/hero")
     assert caught.value.code == "PARSE_ERROR"
@@ -140,25 +220,103 @@ def test_owtics_does_not_execute_javascript_or_follow_circular_references():
 def release_fixture():
     tag = "test-release"
     base = f"https://github.com/IanBosworth/owcs-korea-data/releases/download/{tag}/"
-    manifest = {"schema_version": "owcs-publication-v1", "release_version": tag, "safety": {"approved_maps_only": True}, "data_as_of": "2026-07-11", "generated_at_utc": "2026-07-30T01:00:00Z", "methodology_version": "hero-intervals-v3-echo-copy", "license": "CC BY 4.0", "counts": {"matches": 2, "maps": 2, "hero_bans": 2, "hero_time_segments": 4}}
-    dataset = {"schema_version": "owcs-publication-v1", "release_version": tag, "matches": [
-        {"id": 1, "match_date": "2026-06-12", "team_a": "Alpha", "team_b": "Beta", "stage": "Regular Season"},
-        {"id": 2, "match_date": "2026-07-11", "team_a": "Alpha", "team_b": "Gamma", "stage": "Playoffs"},
-    ], "maps": [
-        {"id": 10, "match_id": 1, "map_name": "King's Row", "winner_team": "Alpha"},
-        {"id": 20, "match_id": 2, "map_name": "Ilios", "winner_team": "Gamma"},
-    ], "hero_bans": [
-        {"map_id": 10, "hero": "Ana", "banned_by_team": "Alpha"},
-        {"map_id": 20, "hero": "Reinhardt", "banned_by_team": "Gamma"},
-    ], "hero_time_segments": [
-        {"map_id": 10, "hero": "Reinhardt", "team": "Alpha", "duration_seconds": 100, "echo_copy_target": None},
-        {"map_id": 10, "hero": "Echo", "team": "Alpha", "duration_seconds": 10, "echo_copy_target": "Reinhardt"},
-        {"map_id": 10, "hero": "unknown", "team": "Alpha", "duration_seconds": 8, "echo_copy_target": None},
-        {"map_id": 20, "hero": "Ana", "team": "Gamma", "duration_seconds": 50, "echo_copy_target": None},
-    ]}
-    stats = {"metric_version": manifest["methodology_version"], "coverage": {"approved_only": True}, "export_manifest": {"data_as_of": "2026-07-11"}, "hero_stats": [{"hero": "Reinhardt", "role": "tank", "hero_seconds": 100, "pick_rate": 0.9, "pick_rate_is_ban_adjusted": True, "unmirrored_winrate": 0.75}]}
-    payloads = {base + "manifest.json": manifest, base + f"owcs-korea-data-{tag}.json": dataset, base + f"owcs-korea-hero-stats-{tag}.json": stats}
-    release = {"tag_name": tag, "published_at": "2026-07-31T03:00:58Z", "html_url": f"https://github.com/IanBosworth/owcs-korea-data/releases/tag/{tag}", "assets": [{"name": url.rsplit("/", 1)[1], "size": 3000, "browser_download_url": url} for url in payloads]}
+    manifest = {
+        "schema_version": "owcs-publication-v1",
+        "release_version": tag,
+        "safety": {"approved_maps_only": True},
+        "data_as_of": "2026-07-11",
+        "generated_at_utc": "2026-07-30T01:00:00Z",
+        "methodology_version": "hero-intervals-v3-echo-copy",
+        "license": "CC BY 4.0",
+        "counts": {"matches": 2, "maps": 2, "hero_bans": 2, "hero_time_segments": 4},
+    }
+    dataset = {
+        "schema_version": "owcs-publication-v1",
+        "release_version": tag,
+        "matches": [
+            {
+                "id": 1,
+                "match_date": "2026-06-12",
+                "team_a": "Alpha",
+                "team_b": "Beta",
+                "stage": "Regular Season",
+            },
+            {
+                "id": 2,
+                "match_date": "2026-07-11",
+                "team_a": "Alpha",
+                "team_b": "Gamma",
+                "stage": "Playoffs",
+            },
+        ],
+        "maps": [
+            {"id": 10, "match_id": 1, "map_name": "King's Row", "winner_team": "Alpha"},
+            {"id": 20, "match_id": 2, "map_name": "Ilios", "winner_team": "Gamma"},
+        ],
+        "hero_bans": [
+            {"map_id": 10, "hero": "Ana", "banned_by_team": "Alpha"},
+            {"map_id": 20, "hero": "Reinhardt", "banned_by_team": "Gamma"},
+        ],
+        "hero_time_segments": [
+            {
+                "map_id": 10,
+                "hero": "Reinhardt",
+                "team": "Alpha",
+                "duration_seconds": 100,
+                "echo_copy_target": None,
+            },
+            {
+                "map_id": 10,
+                "hero": "Echo",
+                "team": "Alpha",
+                "duration_seconds": 10,
+                "echo_copy_target": "Reinhardt",
+            },
+            {
+                "map_id": 10,
+                "hero": "unknown",
+                "team": "Alpha",
+                "duration_seconds": 8,
+                "echo_copy_target": None,
+            },
+            {
+                "map_id": 20,
+                "hero": "Ana",
+                "team": "Gamma",
+                "duration_seconds": 50,
+                "echo_copy_target": None,
+            },
+        ],
+    }
+    stats = {
+        "metric_version": manifest["methodology_version"],
+        "coverage": {"approved_only": True},
+        "export_manifest": {"data_as_of": "2026-07-11"},
+        "hero_stats": [
+            {
+                "hero": "Reinhardt",
+                "role": "tank",
+                "hero_seconds": 100,
+                "pick_rate": 0.9,
+                "pick_rate_is_ban_adjusted": True,
+                "unmirrored_winrate": 0.75,
+            }
+        ],
+    }
+    payloads = {
+        base + "manifest.json": manifest,
+        base + f"owcs-korea-data-{tag}.json": dataset,
+        base + f"owcs-korea-hero-stats-{tag}.json": stats,
+    }
+    release = {
+        "tag_name": tag,
+        "published_at": "2026-07-31T03:00:58Z",
+        "html_url": f"https://github.com/IanBosworth/owcs-korea-data/releases/tag/{tag}",
+        "assets": [
+            {"name": url.rsplit("/", 1)[1], "size": 3000, "browser_download_url": url}
+            for url in payloads
+        ],
+    }
     payloads[LATEST_RELEASE] = release
     return payloads
 
@@ -171,7 +329,13 @@ class JsonClient:
 
     async def get_json(self, source, url, params=None, ttl=0):
         self.calls.append(url)
-        return SimpleNamespace(data=copy.deepcopy(self.payloads[url]), url=url, retrieved_at=FETCHED, cached=False, stale=url == self.stale_url)
+        return SimpleNamespace(
+            data=copy.deepcopy(self.payloads[url]),
+            url=url,
+            retrieved_at=FETCHED,
+            cached=False,
+            stale=url == self.stale_url,
+        )
 
     def table(self, suffix):
         return next(value for url, value in self.payloads.items() if url.endswith(suffix))
@@ -194,7 +358,9 @@ def test_owcs_keeps_coverage_publish_generation_times_distinct():
     assert result.data["license"] == "CC BY 4.0"
 
 
-@pytest.mark.parametrize(("view", "count"), [("matches", 2), ("maps", 2), ("bans", 2), ("teams", 3)])
+@pytest.mark.parametrize(
+    ("view", "count"), [("matches", 2), ("maps", 2), ("bans", 2), ("teams", 3)]
+)
 def test_owcs_reads_each_normalized_view(view, count):
     result = run_esports(view=view)
     assert result.data["total"] == count
@@ -207,7 +373,9 @@ def test_owcs_scoped_hero_time_does_not_reuse_global_rates_or_echo_target():
     assert row["pick_rate"] is None and row["unmirrored_winrate"] is None
     assert row["by_map"] == [{"map_name": "King's Row", "hero_seconds": 100.0}]
     result = run_esports(view="hero_meta", map="kings-row", hero="echo")
-    assert result.data["records"][0]["echo_copy_targets"] == [{"hero": "reinhardt", "seconds": 10.0}]
+    assert result.data["records"][0]["echo_copy_targets"] == [
+        {"hero": "reinhardt", "seconds": 10.0}
+    ]
 
 
 def test_owcs_hero_filter_for_bans_means_banned_hero_not_hero_played():
@@ -224,7 +392,17 @@ def test_owcs_filters_matches_teams_and_pages():
     assert result.data["total"] == 2 and len(result.data["records"]) == 1
 
 
-@pytest.mark.parametrize("filters", [{"region": "ASIA"}, {"view": "matches", "role": "tank"}, {"view": "hero_meta", "role": "tank", "team": "Alpha"}, {"tier": "MASTER"}, {"limit": 1000}, {"after": "2026-99-99"}])
+@pytest.mark.parametrize(
+    "filters",
+    [
+        {"region": "ASIA"},
+        {"view": "matches", "role": "tank"},
+        {"view": "hero_meta", "role": "tank", "team": "Alpha"},
+        {"tier": "MASTER"},
+        {"limit": 1000},
+        {"after": "2026-99-99"},
+    ],
+)
 def test_owcs_rejects_unapplied_or_invalid_filters(filters):
     with pytest.raises(SourceError) as caught:
         run_esports(**filters)
@@ -241,7 +419,9 @@ def test_owcs_corrupt_release_is_source_failure(mutation):
     elif mutation == "reference":
         client.table("owcs-korea-data-test-release.json")["maps"][0]["match_id"] = 99
     else:
-        client.table("owcs-korea-data-test-release.json")["hero_time_segments"][0]["duration_seconds"] = -1
+        client.table("owcs-korea-data-test-release.json")["hero_time_segments"][0][
+            "duration_seconds"
+        ] = -1
     with pytest.raises(SourceError) as caught:
         run_esports(client, view="matches")
     assert caught.value.code == "PARSE_ERROR"

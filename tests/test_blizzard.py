@@ -21,8 +21,11 @@ FORM = """
 <select id="filter-map-select"><option value="all-maps" data-rqs="81,97">All Maps</option>
 <option value="kings-row" data-rqs="97">King's Row</option></select>
 """
-ROW = {"id": "reinhardt", "hero": {"name": "Reinhardt", "role": "TANK"},
-       "cells": {"name": "Reinhardt", "winrate": 47.8, "pickrate": 5.1, "banrate": 1.8}}
+ROW = {
+    "id": "reinhardt",
+    "hero": {"name": "Reinhardt", "role": "TANK"},
+    "cells": {"name": "Reinhardt", "winrate": 47.8, "pickrate": 5.1, "banrate": 1.8},
+}
 
 
 class Client:
@@ -34,7 +37,14 @@ class Client:
         self.columns = ["name", "winrate", "pickrate", "banrate"]
 
     def result(self, data, url):
-        return SimpleNamespace(data=data, url=url, retrieved_at="2026-09-09T00:00:00+00:00", headers={}, cached=False, stale=False)
+        return SimpleNamespace(
+            data=data,
+            url=url,
+            retrieved_at="2026-09-09T00:00:00+00:00",
+            headers={},
+            cached=False,
+            stale=False,
+        )
 
     async def get_text(self, source, url, params=None, ttl=0, headers=None):
         self.calls.append((url, params))
@@ -43,12 +53,20 @@ class Client:
     async def get_json(self, source, url, params=None, ttl=0, headers=None):
         self.calls.append((url, params))
         selected = {**params, **self.selected_override}
-        return self.result({"rates": {"rates": self.rows, "selected": selected}, "columns": [{"id": column} for column in self.columns]}, url)
+        return self.result(
+            {
+                "rates": {"rates": self.rows, "selected": selected},
+                "columns": [{"id": column} for column in self.columns],
+            },
+            url,
+        )
 
 
 def test_discovers_queue_value_instead_of_hardcoding_and_preserves_percentages():
     client = Client()
-    result = asyncio.run(BlizzardAdapter(client).meta({"region": "ASIA", "tier": "MASTER", "heroes": ["라인하르트"]}))
+    result = asyncio.run(
+        BlizzardAdapter(client).meta({"region": "ASIA", "tier": "MASTER", "heroes": ["라인하르트"]})
+    )
     assert client.calls[-1][1]["rq"] == "97"
     assert result.data[0]["winrate"] == 47.8
     assert result.data[0]["banrate"] == 1.8
@@ -58,7 +76,16 @@ def test_discovers_queue_value_instead_of_hardcoding_and_preserves_percentages()
     assert result.source_updated_at is None
 
 
-@pytest.mark.parametrize("field,wrong", [("tier", "All"), ("rq", "0"), ("region", "Europe"), ("map", "kings-row"), ("input", "Console")])
+@pytest.mark.parametrize(
+    "field,wrong",
+    [
+        ("tier", "All"),
+        ("rq", "0"),
+        ("region", "Europe"),
+        ("map", "kings-row"),
+        ("input", "Console"),
+    ],
+)
 def test_rejects_source_silently_changing_any_requested_filter(field, wrong):
     client = Client()
     client.selected_override = {field: wrong}
@@ -96,7 +123,9 @@ def test_korea_requires_explicit_fallback_and_never_sets_match_server():
         asyncio.run(BlizzardAdapter(client).meta({"region": "KR"}))
     assert error.value.code == "UNSUPPORTED_FILTER"
     assert not client.calls
-    result = asyncio.run(BlizzardAdapter(client).meta({"region": "KR", "allow_region_fallback": True}))
+    result = asyncio.run(
+        BlizzardAdapter(client).meta({"region": "KR", "allow_region_fallback": True})
+    )
     assert result.requested_filters["region"] == "KR"
     assert result.applied_filters["region"] == "ASIA"
     assert result.data[0]["source_region"] == "ASIA"
@@ -104,7 +133,15 @@ def test_korea_requires_explicit_fallback_and_never_sets_match_server():
     assert any("한국" in warning for warning in result.warnings)
 
 
-@pytest.mark.parametrize("filters", [{"mode": "quickplay", "tier": "MASTER"}, {"mode": "quickplay", "map": "kings-row"}, {"tier": "CHAMPION"}, {"rq": "2"}])
+@pytest.mark.parametrize(
+    "filters",
+    [
+        {"mode": "quickplay", "tier": "MASTER"},
+        {"mode": "quickplay", "map": "kings-row"},
+        {"tier": "CHAMPION"},
+        {"rq": "2"},
+    ],
+)
 def test_unsupported_requests_are_not_silently_broadened(filters):
     client = Client()
     with pytest.raises(SourceError) as error:
@@ -115,7 +152,9 @@ def test_unsupported_requests_are_not_silently_broadened(filters):
 
 def test_unknown_queue_label_is_unavailable_rather_than_guessed():
     client = Client()
-    client.form = FORM.replace("Quick Play - Role Queue", "New Queue A").replace("Competitive - Role Queue", "New Queue B")
+    client.form = FORM.replace("Quick Play - Role Queue", "New Queue A").replace(
+        "Competitive - Role Queue", "New Queue B"
+    )
     with pytest.raises(SourceError) as error:
         asyncio.run(BlizzardAdapter(client).meta({}))
     assert error.value.code == "PARSE_ERROR"
