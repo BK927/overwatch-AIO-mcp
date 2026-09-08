@@ -40,6 +40,8 @@ class SourceResult:
 
         result = asdict(self)
         empty = self.data is None or self.data == [] or self.data == {}
+        if isinstance(self.data, dict) and "records" in self.data:
+            empty = self.data["records"] == []
         result["status"] = "stale" if self.stale else "empty" if empty else "ok"
         result["error"] = (
             {"code": "STALE_DATA", "message": "Cached data exceeded its freshness interval."}

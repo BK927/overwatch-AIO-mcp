@@ -44,7 +44,9 @@ def test_rate_limit_and_parse_are_errors_not_empty():
             repo = Repository(":memory:")
             client = HttpClient(
                 repo,
-                transport=httpx.MockTransport(lambda req: httpx.Response(status, text=body)),
+                transport=httpx.MockTransport(
+                    lambda req, status=status, body=body: httpx.Response(status, text=body)
+                ),
                 retries=0,
                 min_interval=0,
             )

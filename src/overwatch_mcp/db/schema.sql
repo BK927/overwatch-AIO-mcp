@@ -63,3 +63,8 @@ CREATE TABLE IF NOT EXISTS hero_meta_snapshots (
 );
 CREATE INDEX IF NOT EXISTS meta_history ON hero_meta_snapshots(series_key,retrieved_at);
 CREATE INDEX IF NOT EXISTS leaderboard_player ON leaderboard_snapshots(player_id,observed_at);
+CREATE TABLE IF NOT EXISTS collection_jobs (
+    job_key TEXT PRIMARY KEY, name TEXT NOT NULL,
+    next_run REAL NOT NULL DEFAULT 0, lease_until REAL NOT NULL DEFAULT 0,
+    last_status TEXT, last_run REAL
+);

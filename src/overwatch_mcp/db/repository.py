@@ -18,10 +18,16 @@ def dumps(value: Any) -> str:
 
 def series_key(source: str, filters: dict) -> str:
     # Hero selections and display ordering must not fragment a statistical series.
+    region = str(filters.get("source_region") or filters.get("region") or "ASIA").upper()
+    if source == "owtics" and region == "KR":
+        region = "KOREA"
     context = {
-        k: v
-        for k, v in filters.items()
-        if k in ("platform", "mode", "region", "source_region", "tier", "map", "role")
+        "platform": str(filters.get("platform") or "pc").lower() if source != "owtics" else None,
+        "mode": str(filters.get("mode") or "competitive").lower(),
+        "region": region,
+        "tier": str(filters.get("tier") or "ALL").upper(),
+        "map": filters.get("map") or "all-maps",
+        "role": str(filters["role"]).lower() if filters.get("role") else None,
     }
     return hashlib.sha256(dumps([source, context]).encode()).hexdigest()
 
@@ -127,10 +133,20 @@ class Repository:
         after: str | None = None,
         limit: int = 200,
     ) -> list[dict]:
+        clauses, parameters = ["series_key=?"], [series_key(source, filters)]
+        if heroes:
+            clauses.append("hero IN (" + ",".join("?" for _ in heroes) + ")")
+            parameters.extend(heroes)
+        if after:
+            clauses.append("retrieved_at>=?")
+            parameters.append(after)
+        parameters.append(limit)
         with self._lock:
             rows = self.conn.execute(
-                "SELECT * FROM hero_meta_snapshots WHERE series_key=? ORDER BY retrieved_at DESC,id DESC",
-                (series_key(source, filters),),
+                "SELECT * FROM hero_meta_snapshots WHERE "
+                + " AND ".join(clauses)
+                + " ORDER BY retrieved_at DESC,id DESC LIMIT ?",
+                parameters,
             ).fetchall()
         result = []
         for row in rows:
@@ -188,6 +204,7 @@ class Repository:
                     (row["code"],),
                 ).fetchone()
                 if validation:
+                    data["source_replay_status"] = data.get("replay_status")
                     data["validation"] = dict(validation)
                     data["replay_status"] = validation["status"]
                 result.append(data)
