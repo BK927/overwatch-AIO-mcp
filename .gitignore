@@ -9,3 +9,4 @@ dist/
 .env
 .codex-tmp/
 research/fixtures/
+research/registry-test-run*/

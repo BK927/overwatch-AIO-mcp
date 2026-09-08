@@ -1,0 +1,833 @@
+{
+  "ow_catalog": {
+    "description": "List public hero details, maps and supported filters. Map modes are map types, not competitive seasonal pools.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "default": "heroes",
+          "enum": [
+            "heroes",
+            "maps",
+            "modes",
+            "tiers",
+            "regions",
+            "filters"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "locale": {
+          "default": "ko-KR",
+          "title": "Locale",
+          "type": "string"
+        },
+        "hero": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Hero"
+        },
+        "mode": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mode"
+        },
+        "role": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Role"
+        }
+      },
+      "title": "CatalogRequest",
+      "type": "object"
+    }
+  },
+  "ow_meta": {
+    "description": "Compare hero aggregate percentages, maps, tiers or source regions; history uses stored retrieval snapshots. ASIA is not KR. No matchup winrates.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "view": {
+          "default": "heroes",
+          "enum": [
+            "heroes",
+            "map_comparison",
+            "tier_comparison",
+            "region_comparison",
+            "history"
+          ],
+          "title": "View",
+          "type": "string"
+        },
+        "heroes": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 60,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Heroes"
+        },
+        "platform": {
+          "default": "pc",
+          "title": "Platform",
+          "type": "string"
+        },
+        "mode": {
+          "default": "competitive",
+          "title": "Mode",
+          "type": "string"
+        },
+        "region": {
+          "default": "ASIA",
+          "title": "Region",
+          "type": "string"
+        },
+        "tier": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tier"
+        },
+        "map": {
+          "default": "all-maps",
+          "title": "Map",
+          "type": "string"
+        },
+        "role": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Role"
+        },
+        "source": {
+          "default": "auto",
+          "enum": [
+            "auto",
+            "overfast",
+            "owtics",
+            "blizzard"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "allow_region_fallback": {
+          "default": false,
+          "title": "Allow Region Fallback",
+          "type": "boolean"
+        },
+        "maps": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 6,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maps"
+        },
+        "tiers": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 6,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tiers"
+        },
+        "regions": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 6,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Regions"
+        },
+        "order_by": {
+          "default": "winrate:desc",
+          "title": "Order By",
+          "type": "string"
+        },
+        "after": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "After"
+        },
+        "limit": {
+          "default": 100,
+          "maximum": 500,
+          "minimum": 1,
+          "title": "Limit",
+          "type": "integer"
+        }
+      },
+      "title": "MetaRequest",
+      "type": "object"
+    }
+  },
+  "ow_players_search": {
+    "description": "Search public BattleTags or names. Equal names do not establish identity or nationality.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "query": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Query",
+          "type": "string"
+        },
+        "limit": {
+          "default": 10,
+          "maximum": 50,
+          "minimum": 1,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "offset": {
+          "default": 0,
+          "maximum": 10000,
+          "minimum": 0,
+          "title": "Offset",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "title": "PlayersSearchRequest",
+      "type": "object"
+    }
+  },
+  "ow_player_get": {
+    "description": "Read a public player profile and filtered career/hero/role statistics; report private and missing data distinctly.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "player_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Player Id",
+          "type": "string"
+        },
+        "view": {
+          "default": "summary",
+          "enum": [
+            "summary",
+            "career",
+            "hero",
+            "roles"
+          ],
+          "title": "View",
+          "type": "string"
+        },
+        "platform": {
+          "default": "pc",
+          "title": "Platform",
+          "type": "string"
+        },
+        "mode": {
+          "default": "competitive",
+          "title": "Mode",
+          "type": "string"
+        },
+        "hero": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Hero"
+        },
+        "role": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Role"
+        }
+      },
+      "required": [
+        "player_id"
+      ],
+      "title": "PlayerGetRequest",
+      "type": "object"
+    }
+  },
+  "ow_rankers_search": {
+    "description": "Search the locally curated, evidenced ranker registry only, including dated rank observations. Not the complete live Top 500.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "region": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Region"
+        },
+        "country": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Country"
+        },
+        "role": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Role"
+        },
+        "hero": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Hero"
+        },
+        "season": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Season"
+        },
+        "rank_max": {
+          "default": 500,
+          "maximum": 10000,
+          "minimum": 1,
+          "title": "Rank Max",
+          "type": "integer"
+        },
+        "verified_only": {
+          "default": true,
+          "title": "Verified Only",
+          "type": "boolean"
+        },
+        "limit": {
+          "default": 20,
+          "maximum": 100,
+          "minimum": 1,
+          "title": "Limit",
+          "type": "integer"
+        }
+      },
+      "title": "RankersSearchRequest",
+      "type": "object"
+    }
+  },
+  "ow_replays_search": {
+    "description": "Find public replay codes and filter stored identity/region/validation evidence. A Korean player does not prove a Korean match server.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "hero": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Hero"
+        },
+        "map": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Map"
+        },
+        "player": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Player"
+        },
+        "player_id": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Player Id"
+        },
+        "player_pool": {
+          "default": "all",
+          "enum": [
+            "all",
+            "kr_rankers"
+          ],
+          "title": "Player Pool",
+          "type": "string"
+        },
+        "tier": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tier"
+        },
+        "tier_min": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tier Min"
+        },
+        "platform": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Platform"
+        },
+        "uploaded_after": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Uploaded After"
+        },
+        "player_country": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Player Country"
+        },
+        "match_region": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Match Region"
+        },
+        "region_evidence": {
+          "default": "verified_only",
+          "enum": [
+            "verified_only",
+            "include_claims"
+          ],
+          "title": "Region Evidence",
+          "type": "string"
+        },
+        "ranker_status": {
+          "default": "any",
+          "enum": [
+            "any",
+            "verified"
+          ],
+          "title": "Ranker Status",
+          "type": "string"
+        },
+        "playable_status": {
+          "anyOf": [
+            {
+              "items": {
+                "enum": [
+                  "unverified",
+                  "source_reports_expired",
+                  "user_reported_working",
+                  "client_verified",
+                  "needs_recheck"
+                ],
+                "type": "string"
+              },
+              "maxItems": 5,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Playable Status"
+        },
+        "limit": {
+          "default": 20,
+          "maximum": 100,
+          "minimum": 1,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "refresh": {
+          "default": true,
+          "title": "Refresh",
+          "type": "boolean"
+        }
+      },
+      "title": "ReplaysSearchRequest",
+      "type": "object"
+    }
+  },
+  "ow_replay_get": {
+    "description": "Get replay details and independently recorded playback evidence. Public source flags never imply client verification.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "pattern": "^[A-Za-z0-9]{6}$",
+          "title": "Code",
+          "type": "string"
+        },
+        "refresh": {
+          "default": true,
+          "title": "Refresh",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "title": "ReplayGetRequest",
+      "type": "object"
+    }
+  },
+  "ow_patches": {
+    "description": "Read official English patch notes and hero changes. Explicit replay invalidation notices mark older checks needs_recheck.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "view": {
+          "default": "latest",
+          "enum": [
+            "latest",
+            "history"
+          ],
+          "title": "View",
+          "type": "string"
+        },
+        "hero": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Hero"
+        },
+        "after": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "After"
+        },
+        "before": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Before"
+        },
+        "locale": {
+          "default": "en-US",
+          "title": "Locale",
+          "type": "string"
+        },
+        "limit": {
+          "default": 20,
+          "maximum": 100,
+          "minimum": 1,
+          "title": "Limit",
+          "type": "integer"
+        }
+      },
+      "title": "PatchesRequest",
+      "type": "object"
+    }
+  },
+  "ow_esports": {
+    "description": "Read the released OWCS Korea dataset with match coverage and release dates. Esports metrics are separate from ranked ladder statistics.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "region": {
+          "const": "KOREA",
+          "default": "KOREA",
+          "title": "Region",
+          "type": "string"
+        },
+        "view": {
+          "default": "hero_meta",
+          "enum": [
+            "hero_meta",
+            "matches",
+            "maps",
+            "bans",
+            "teams"
+          ],
+          "title": "View",
+          "type": "string"
+        },
+        "hero": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Hero"
+        },
+        "map": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Map"
+        },
+        "team": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Team"
+        },
+        "stage": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stage"
+        },
+        "after": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "After"
+        },
+        "before": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Before"
+        },
+        "limit": {
+          "default": 50,
+          "maximum": 500,
+          "minimum": 1,
+          "title": "Limit",
+          "type": "integer"
+        }
+      },
+      "title": "EsportsRequest",
+      "type": "object"
+    }
+  },
+  "ow_status": {
+    "description": "Show observed source health, capabilities and stored coverage. refresh performs bounded cached probes; default performs no network access.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "refresh": {
+          "default": false,
+          "title": "Refresh",
+          "type": "boolean"
+        }
+      },
+      "title": "StatusRequest",
+      "type": "object"
+    }
+  }
+}

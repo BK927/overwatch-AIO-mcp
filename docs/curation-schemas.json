@@ -1,0 +1,320 @@
+{
+  "RankerRecord": {
+    "$defs": {
+      "Evidence": {
+        "additionalProperties": false,
+        "properties": {
+          "evidence_type": {
+            "minLength": 1,
+            "title": "Evidence Type",
+            "type": "string"
+          },
+          "value": {
+            "minLength": 1,
+            "title": "Value",
+            "type": "string"
+          },
+          "confidence": {
+            "default": "source_claim",
+            "enum": [
+              "verified",
+              "source_claim",
+              "inferred",
+              "unknown"
+            ],
+            "title": "Confidence",
+            "type": "string"
+          },
+          "source": {
+            "minLength": 1,
+            "title": "Source",
+            "type": "string"
+          },
+          "source_url": {
+            "minLength": 1,
+            "title": "Source Url",
+            "type": "string"
+          },
+          "observed_at": {
+            "format": "date-time",
+            "title": "Observed At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "evidence_type",
+          "value",
+          "source",
+          "source_url",
+          "observed_at"
+        ],
+        "title": "Evidence",
+        "type": "object"
+      },
+      "HeroTag": {
+        "additionalProperties": false,
+        "properties": {
+          "evidence_type": {
+            "minLength": 1,
+            "title": "Evidence Type",
+            "type": "string"
+          },
+          "value": {
+            "minLength": 1,
+            "title": "Value",
+            "type": "string"
+          },
+          "confidence": {
+            "default": "source_claim",
+            "enum": [
+              "verified",
+              "source_claim",
+              "inferred",
+              "unknown"
+            ],
+            "title": "Confidence",
+            "type": "string"
+          },
+          "source": {
+            "minLength": 1,
+            "title": "Source",
+            "type": "string"
+          },
+          "source_url": {
+            "minLength": 1,
+            "title": "Source Url",
+            "type": "string"
+          },
+          "observed_at": {
+            "format": "date-time",
+            "title": "Observed At",
+            "type": "string"
+          },
+          "hero": {
+            "title": "Hero",
+            "type": "string"
+          }
+        },
+        "required": [
+          "evidence_type",
+          "value",
+          "source",
+          "source_url",
+          "observed_at",
+          "hero"
+        ],
+        "title": "HeroTag",
+        "type": "object"
+      },
+      "Leaderboard": {
+        "additionalProperties": false,
+        "properties": {
+          "leaderboard_region": {
+            "title": "Leaderboard Region",
+            "type": "string"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "season": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Season"
+          },
+          "rank": {
+            "exclusiveMinimum": 0,
+            "title": "Rank",
+            "type": "integer"
+          },
+          "tier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Tier"
+          },
+          "observed_at": {
+            "format": "date-time",
+            "title": "Observed At",
+            "type": "string"
+          },
+          "source": {
+            "minLength": 1,
+            "title": "Source",
+            "type": "string"
+          },
+          "source_url": {
+            "minLength": 1,
+            "title": "Source Url",
+            "type": "string"
+          },
+          "confidence": {
+            "default": "source_claim",
+            "enum": [
+              "verified",
+              "source_claim",
+              "inferred",
+              "unknown"
+            ],
+            "title": "Confidence",
+            "type": "string"
+          }
+        },
+        "required": [
+          "leaderboard_region",
+          "role",
+          "rank",
+          "observed_at",
+          "source",
+          "source_url"
+        ],
+        "title": "Leaderboard",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "battle_tag": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Battle Tag"
+      },
+      "overfast_player_id": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Overfast Player Id"
+      },
+      "display_name": {
+        "minLength": 1,
+        "title": "Display Name",
+        "type": "string"
+      },
+      "country": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Country"
+      },
+      "identity_confidence": {
+        "default": "unknown",
+        "enum": [
+          "verified",
+          "source_claim",
+          "inferred",
+          "unknown"
+        ],
+        "title": "Identity Confidence",
+        "type": "string"
+      },
+      "evidence": {
+        "items": {
+          "$ref": "#/$defs/Evidence"
+        },
+        "title": "Evidence",
+        "type": "array"
+      },
+      "leaderboard": {
+        "items": {
+          "$ref": "#/$defs/Leaderboard"
+        },
+        "title": "Leaderboard",
+        "type": "array"
+      },
+      "heroes": {
+        "items": {
+          "$ref": "#/$defs/HeroTag"
+        },
+        "title": "Heroes",
+        "type": "array"
+      }
+    },
+    "required": [
+      "display_name"
+    ],
+    "title": "RankerRecord",
+    "type": "object"
+  },
+  "Evidence": {
+    "additionalProperties": false,
+    "properties": {
+      "evidence_type": {
+        "minLength": 1,
+        "title": "Evidence Type",
+        "type": "string"
+      },
+      "value": {
+        "minLength": 1,
+        "title": "Value",
+        "type": "string"
+      },
+      "confidence": {
+        "default": "source_claim",
+        "enum": [
+          "verified",
+          "source_claim",
+          "inferred",
+          "unknown"
+        ],
+        "title": "Confidence",
+        "type": "string"
+      },
+      "source": {
+        "minLength": 1,
+        "title": "Source",
+        "type": "string"
+      },
+      "source_url": {
+        "minLength": 1,
+        "title": "Source Url",
+        "type": "string"
+      },
+      "observed_at": {
+        "format": "date-time",
+        "title": "Observed At",
+        "type": "string"
+      }
+    },
+    "required": [
+      "evidence_type",
+      "value",
+      "source",
+      "source_url",
+      "observed_at"
+    ],
+    "title": "Evidence",
+    "type": "object"
+  }
+}

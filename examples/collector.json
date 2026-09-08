@@ -1,0 +1,11 @@
+{
+  "jobs": [
+    {"name": "reinhardt-replays", "tool": "ow_replays_search", "arguments": {"hero": "reinhardt", "platform": "pc", "limit": 20}, "interval_seconds": 1800},
+    {"name": "asia-master-tanks", "tool": "ow_meta", "arguments": {"heroes": ["reinhardt", "ramattra", "dva"], "region": "ASIA", "tier": "MASTER", "role": "tank"}, "interval_seconds": 3600},
+    {"name": "korea-source-meta", "tool": "ow_meta", "arguments": {"heroes": ["reinhardt"], "region": "KR", "tier": "MASTER"}, "interval_seconds": 3600},
+    {"name": "official-patches", "tool": "ow_patches", "arguments": {"view": "history", "limit": 10}, "interval_seconds": 21600},
+    {"name": "owcs-release", "tool": "ow_esports", "arguments": {"view": "hero_meta"}, "interval_seconds": 86400},
+    {"name": "hero-catalog", "tool": "ow_catalog", "arguments": {"type": "heroes"}, "interval_seconds": 86400},
+    {"name": "map-catalog", "tool": "ow_catalog", "arguments": {"type": "maps"}, "interval_seconds": 86400}
+  ]
+}

@@ -1,0 +1,190 @@
+{
+  "checked_at": "2026-09-08T18:57:49.141251+00:00",
+  "network": "public anonymous GET",
+  "database": "isolated in-memory",
+  "checks": [
+    {
+      "check": "catalog",
+      "tool": "ow_catalog",
+      "status": "ok",
+      "count": 53,
+      "source": "overfast",
+      "source_url": "https://overfast-api.tekrop.fr/heroes?locale=ko-kr",
+      "retrieved_at": "2026-09-08T18:57:31.532437+00:00",
+      "error": null,
+      "warnings": []
+    },
+    {
+      "check": "overfast_meta",
+      "tool": "ow_meta",
+      "status": "ok",
+      "count": 3,
+      "source": "overfast",
+      "source_url": "https://overfast-api.tekrop.fr/heroes/stats?platform=pc&gamemode=competitive&region=asia&competitive_division=master&order_by=winrate%3Adesc",
+      "retrieved_at": "2026-09-08T18:57:31.814362+00:00",
+      "error": null,
+      "warnings": [
+        "Only Role Queue aggregates are available. Source regions do not identify the server of any particular match."
+      ]
+    },
+    {
+      "check": "blizzard_meta",
+      "tool": "ow_meta",
+      "status": "ok",
+      "count": 1,
+      "source": "blizzard",
+      "source_url": "https://overwatch.blizzard.com/en-us/rates/data/?rq=2&input=PC&region=Asia&tier=Master&map=all-maps",
+      "retrieved_at": "2026-09-08T18:57:32.541712+00:00",
+      "error": null,
+      "warnings": [
+        "Official statistics describe source regions and Role Queue populations; they do not establish Korean-only data or a match server."
+      ]
+    },
+    {
+      "check": "owtics_meta",
+      "tool": "ow_meta",
+      "status": "ok",
+      "count": 1,
+      "source": "owtics",
+      "source_url": "https://owtics.gg/en-US/hero?region=KOREA&tier=MASTER&mode=COMPETITIVE",
+      "retrieved_at": "2026-09-08T18:57:33.792825+00:00",
+      "error": null,
+      "warnings": [
+        "OWTICS source-region labels describe its own population; they do not verify player country or match server location.",
+        "Requested PC platform cannot be verified from OWTICS' payload; no platform filter is claimed as applied."
+      ]
+    },
+    {
+      "check": "map_comparison",
+      "tool": "ow_meta",
+      "status": "ok",
+      "count": 2,
+      "source": "multiple",
+      "source_url": "local:comparison",
+      "retrieved_at": "2026-09-08T18:57:35.562861+00:00",
+      "error": null,
+      "warnings": [
+        "Differences are percentage points relative to the first successful nonempty group. Cross-source differences are not calculated."
+      ]
+    },
+    {
+      "check": "stored_history",
+      "tool": "ow_meta",
+      "status": "ok",
+      "count": 1,
+      "source": "overfast",
+      "source_url": "local:hero_meta_snapshots",
+      "retrieved_at": "2026-09-08T18:57:31.814362+00:00",
+      "error": null,
+      "warnings": [
+        "Stored aggregate observations are compared by retrieval time; these are not match results played during the interval. Empty history means no stored observations."
+      ]
+    },
+    {
+      "check": "player_search",
+      "tool": "ow_players_search",
+      "status": "ok",
+      "count": 1,
+      "source": "overfast",
+      "source_url": "https://overfast-api.tekrop.fr/players?name=TeKrop-2217&limit=1&offset=0&order_by=name%3Aasc",
+      "retrieved_at": "2026-09-08T18:57:38.615292+00:00",
+      "error": null,
+      "warnings": []
+    },
+    {
+      "check": "player_stats",
+      "tool": "ow_player_get",
+      "status": "empty",
+      "count": 0,
+      "source": "overfast",
+      "source_url": "https://overfast-api.tekrop.fr/players/TeKrop-2217/stats/summary?platform=pc&gamemode=competitive",
+      "retrieved_at": "2026-09-08T18:57:39.037484+00:00",
+      "error": {
+        "code": "EMPTY_RESULT",
+        "message": "No matching records were found."
+      },
+      "warnings": [
+        "No statistics are available for these filters. This alone does not establish that the profile is private."
+      ]
+    },
+    {
+      "check": "empty_registry",
+      "tool": "ow_rankers_search",
+      "status": "empty",
+      "count": 0,
+      "source": "local_registry",
+      "source_url": "local:players",
+      "retrieved_at": "2026-09-08T18:57:43.184541+00:00",
+      "error": {
+        "code": "EMPTY_RESULT",
+        "message": "No matching records were found."
+      },
+      "warnings": [
+        "Only the stored, evidenced registry is searched. Rankings include their observation dates and are not a complete live Top 500 list."
+      ]
+    },
+    {
+      "check": "replay_search",
+      "tool": "ow_replays_search",
+      "status": "ok",
+      "count": 1,
+      "source": "owreplays",
+      "source_url": "https://owreplays.tv/api/v2/replays?sort=Uploaded&heroes=19&platforms=pc&page=5",
+      "retrieved_at": "2026-09-08T18:57:46.268814+00:00",
+      "error": null,
+      "warnings": [
+        "Public source claims do not verify nationality, match server, player identity, or current in-game playback.",
+        "Search covers source pages 1–5 of 190; additional matches may exist."
+      ]
+    },
+    {
+      "check": "replay_detail",
+      "tool": "ow_replay_get",
+      "status": "ok",
+      "count": 1,
+      "source": "owreplays",
+      "source_url": "https://owreplays.tv/8D8VRC",
+      "retrieved_at": "2026-09-08T18:57:46.762890+00:00",
+      "error": null,
+      "warnings": [
+        "Source verification flags do not establish current in-game playback or player identity."
+      ]
+    },
+    {
+      "check": "patches",
+      "tool": "ow_patches",
+      "status": "ok",
+      "count": 1,
+      "source": "blizzard_patches",
+      "source_url": "https://overwatch.blizzard.com/en-us/news/patch-notes/",
+      "retrieved_at": "2026-09-08T18:57:47.295263+00:00",
+      "error": null,
+      "warnings": []
+    },
+    {
+      "check": "esports",
+      "tool": "ow_esports",
+      "status": "ok",
+      "count": 1,
+      "source": "owcs_korea",
+      "source_url": "https://github.com/IanBosworth/owcs-korea-data/releases/tag/2026.07.30",
+      "retrieved_at": "2026-09-08T18:57:47.614131+00:00",
+      "error": null,
+      "warnings": [
+        "OWCS Korea is an independent, approved-map esports dataset, not competitive ladder statistics or evidence of a KR match server.",
+        "Published pick_rate is ban-adjusted hero-time opportunity; unmirrored_winrate uses unmirrored time. Neither is competitive-match win rate."
+      ]
+    },
+    {
+      "check": "status",
+      "tool": "ow_status",
+      "status": "ok",
+      "count": 1,
+      "source": "server",
+      "source_url": "local:status",
+      "retrieved_at": "2026-09-08T18:57:49.141196+00:00",
+      "error": null,
+      "warnings": []
+    }
+  ]
+}

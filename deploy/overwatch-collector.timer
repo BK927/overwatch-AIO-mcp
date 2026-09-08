@@ -1,0 +1,10 @@
+[Unit]
+Description=Check due Overwatch collection jobs every 30 minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=30min
+Unit=overwatch-collector.service
+
+[Install]
+WantedBy=timers.target
