@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "overwatch-aio": {
+      "command": "uv",
+      "args": ["run", "--frozen", "--no-dev", "--extra", "mcp", "--project", "/absolute/path/to/overwatch-aio-skill", "overwatch-aio-mcp", "serve"]
+    }
+  }
+}

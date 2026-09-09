@@ -1,0 +1,15 @@
+# Replace the project path with your absolute checkout or installed skill path.
+# On Windows, forward slashes work: C:/path/to/overwatch-aio-skill
+[mcp_servers.overwatch-aio]
+command = "uv"
+args = ["run", "--frozen", "--no-dev", "--extra", "mcp", "--project", "/absolute/path/to/overwatch-aio-skill", "overwatch-aio-mcp", "serve"]
+startup_timeout_sec = 30
+
+# Optional: share an existing database explicitly.
+# [mcp_servers.overwatch-aio.env]
+# OW_DB_PATH = "/absolute/path/to/overwatch.db"
+
+# HTTP alternative: replace the table above with the following table.
+# Start the HTTP server yourself before connecting.
+# [mcp_servers.overwatch-aio]
+# url = "http://127.0.0.1:8765/mcp"

@@ -8,6 +8,12 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         python: ["3.11", "3.13"]
+        interface: [skill, mcp]
+        include:
+          - interface: skill
+            extras: ""
+          - interface: mcp
+            extras: "--extra mcp"
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -15,9 +21,11 @@ jobs:
         with:
           version: "0.12.9"
           python-version: ${{ matrix.python }}
-      - run: uv sync --locked --extra dev
-      - run: uv run --frozen --extra dev ruff check src tests scripts
-      - run: uv run --frozen --extra dev ruff format --check src tests scripts
-      - run: uv run --frozen --extra dev python scripts/validate_skill.py
-      - run: uv run --frozen --extra dev pytest -q
+      - run: uv sync --locked --extra dev ${{ matrix.extras }}
+      - name: Verify selected installation
+        run: uv run --frozen --extra dev ${{ matrix.extras }} python -c "import importlib.util; assert bool(importlib.util.find_spec('mcp')) == ('${{ matrix.interface }}' == 'mcp')"
+      - run: uv run --frozen --extra dev ${{ matrix.extras }} ruff check src tests scripts
+      - run: uv run --frozen --extra dev ${{ matrix.extras }} ruff format --check src tests scripts
+      - run: uv run --frozen --extra dev ${{ matrix.extras }} python scripts/validate_skill.py
+      - run: uv run --frozen --extra dev ${{ matrix.extras }} pytest -q
       - run: uv build

@@ -9,6 +9,7 @@ from typing import Any
 
 import httpx2 as httpx
 
+from . import __version__
 from .db.repository import Repository, dumps
 from .models import SourceError, utcnow
 
@@ -41,7 +42,7 @@ class HttpClient:
             follow_redirects=True,
             limits=httpx.Limits(max_connections=4, max_keepalive_connections=4),
             headers={
-                "User-Agent": "Overwatch-AIO-Skill/0.2.0 (public-data research)",
+                "User-Agent": f"Overwatch-AIO-Skill/{__version__} (public-data research)",
                 "Accept": "application/json,text/html;q=0.9",
             },
         )

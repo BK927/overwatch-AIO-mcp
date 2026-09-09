@@ -1,8 +1,8 @@
-# Overwatch AIO Skill 구현 명세
+# Overwatch AIO Skill & MCP 구현 명세
 
 ## 범위와 계약
 
-저장소 루트를 하나의 설치 가능한 Codex 스킬로 구성한다. Python 패키지는 `overwatch_skill`, 배포 패키지와 CLI는 `overwatch-aio-skill`, 버전은 `0.2.0`이다. 10개 조회와 명시적인 근거 관리 명령을 요청 시 실행한다. MCP·정기 수집·예약 실행은 포함하지 않는다. 공개 출처에 없는 정보는 추정하지 않는다.
+저장소 루트를 하나의 설치 가능한 Codex 스킬로 유지하면서 독립적인 MCP 서버를 선택 제공한다. Python 패키지는 `overwatch_skill`, 배포 패키지와 스킬 CLI는 `overwatch-aio-skill`, MCP CLI는 `overwatch-aio-mcp`, 버전은 `0.3.0`이다. 두 인터페이스는 공통 실행 계층의 입력·출력 검증, 10개 조회와 저장소를 공유한다. 스킬은 MCP SDK 없이 실행하며 MCP는 `mcp` 선택 의존성을 설치한다. 정기 수집·예약 실행은 포함하지 않는다. 공개 출처에 없는 정보는 추정하지 않는다.
 
 정확한 조회 입력·출력 JSON Schema는 `docs/query-schemas.json`, SQLite DDL은 `src/overwatch_skill/db/schema.sql`, 랭커 입력 형식은 `Registry`의 Pydantic 모델 및 `docs/curation.md`를 따른다. 조회 스키마는 `uv run overwatch-aio-skill schema --output docs/query-schemas.json`으로 REQUESTS/RESPONSES 모델에서 재생성한다.
 
@@ -14,8 +14,9 @@
 - `EMPTY_RESULT`는 정상 조회의 결과 없음이다. API 장애나 파싱 실패를 빈 배열로 숨기지 않는다.
 - `PRIVATE_PROFILE`, `UNSUPPORTED_FILTER`, `SOURCE_UNAVAILABLE`, `PARSE_ERROR`, `RATE_LIMITED`, `STALE_DATA`, `PARTIAL_RESULT`, 입력 오류 `INVALID_ARGUMENT`를 구분한다.
 - 지역 비교 일부 실패는 개별 오류와 성공 그룹을 함께 반환한다. 다른 출처 간 수치 차이는 자동 계산하지 않는다.
-- 모든 도구는 `responses.py`의 공통 필수 필드·도구별 데이터 구조를 `schema` 명령의 `outputSchema`로 제공하고, 반환 전에 검증한다. 출처별 확장 필드와 기존 값·필드 생략 여부는 보존한다. 표준출력에 검증된 JSON 하나를 반환하며 로그는 표준오류로 분리한다.
+- 모든 도구는 `responses.py`의 공통 필수 필드·도구별 데이터 구조를 `schema` 명령의 `outputSchema`로 제공하고, 반환 전에 검증한다. 출처별 확장 필드와 기존 값·필드 생략 여부는 보존한다. 스킬 CLI는 표준출력에 검증된 JSON 하나를 반환하며 로그는 표준오류로 분리한다. MCP는 같은 본문을 `structuredContent`와 JSON 텍스트로 반환하고 stdio에는 프로토콜 메시지만 출력한다.
 - 종료 코드는 정상·빈 결과·오래된 캐시·일부 성공 `0`, 실행 실패 `1`, 입력 오류(`INVALID_ARGUMENT`, `UNSUPPORTED_FILTER`) `2`다. 비교 전체 실패는 그룹별 오류를 보존하며 `1`을 반환한다. 내부 출력 계약 위반은 구조화된 `INTERNAL_ERROR`로 반환한다.
+- 위 종료 코드는 일회성 CLI의 계약이다. MCP 도구 호출은 본문의 `status=error`일 때만 `isError=true`이며 오류 이후에도 서버는 다음 요청을 처리한다. SDK의 기본값 삽입·형 변환 이전에 원래 입력을 공통 계층에서 검증한다. 도구 스키마는 CLI와 같은 모델에서 생성한다.
 
 ## 도구
 
@@ -77,6 +78,8 @@ SQLite WAL·foreign key·트랜잭션을 사용한다. 주요 테이블은 `play
 
 스킬 자동 선택을 허용한다. 핵심 분기·근거 규칙은 `SKILL.md`, 상세 조회는 `references/queries.md`, 근거 등록은 `docs/curation.md`에서 설명한다. 개인 설치는 GitHub에 게시한 커밋의 루트를 Skill Installer로 복사한다. 사용자 DB·캐시·개발 환경은 배포하지 않으며 설치 후 실행 의존성을 별도로 준비한다.
 
+MCP는 `uv run --frozen --no-dev --extra mcp --project <project-root> overwatch-aio-mcp serve`로 실행한다. 기본 stdio, 선택 `--transport streamable-http`, 기본 HTTP 주소 `127.0.0.1:8765/mcp`다. 인증·공개 호스팅은 별도 배포 구성의 책임이다. `--db`와 환경 변수의 우선순위는 CLI와 동일하다. 서버가 생성한 서비스와 DB 연결은 종료 시 닫고 주입받은 서비스의 수명은 호출자가 관리한다. 서버 실행은 정기 수집을 시작하지 않는다. 두 방식 간 자동 전환이나 MCP를 스킬의 필수 의존성으로 설정하지 않는다.
+
 ## 완료 판정
 
-기존 출처·필터·비율·캐시·근거 보존 테스트와 CLI 입력/출력 계약을 검증한다. 별도 프로세스의 JSON·종료 코드, 다른 작업 폴더, 한글/BOM 입력, 기본 DB 공유, 기존 DB 호환성을 검사한다. MCP 없이 조회·스키마 생성·패키지 빌드가 성공해야 한다. Windows/Linux × Python 3.11/3.13 CI에 스킬 형식 검증을 포함한다. 공개 소스 live smoke는 별도 opt-in으로 수행한다.
+기존 출처·필터·비율·캐시·근거 보존 테스트와 CLI 입력/출력 계약을 검증한다. 별도 프로세스의 JSON·종료 코드, 다른 작업 폴더, 한글/BOM 입력, 기본 DB 공유, 기존 DB 호환성을 검사한다. MCP 없이 조회·스키마 생성·패키지 빌드가 성공해야 한다. MCP 설치 환경에서는 같은 출처 fixture를 두 인터페이스로 실행하고 실제 stdio·HTTP 연결과 정상 종료, 동시 근거 저장·조회를 검증한다. Windows/Linux × Python 3.11/3.13 × 스킬 단독/MCP 포함 CI에 스킬 형식 검증과 빌드를 포함한다. 공개 소스 live smoke는 별도 opt-in으로 수행한다.
