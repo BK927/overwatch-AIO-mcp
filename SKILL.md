@@ -1,6 +1,6 @@
 ---
 name: overwatch-aio-skill
-description: 오버워치 영웅 메타·공개 플레이어 통계·근거가 있는 랭커와 리플레이·공식 패치·OWCS Korea 자료를 조회하고 해석한다. 오버워치 데이터 질문이나 랭커·리플레이 근거 등록 요청에 사용한다.
+description: Query and interpret Overwatch hero meta, public player stats, evidenced rankers and replays, patch notes, and OWCS Korea data. Use for Overwatch data questions or explicit evidence-management requests. 오버워치 메타·플레이어 통계·랭커·리플레이·패치·대회 자료 조회와 근거 등록 요청에 사용한다.
 ---
 
 # Overwatch AIO Skill

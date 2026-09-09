@@ -38,7 +38,7 @@ def validate(root: Path):
         raise ValueError("This skill must run without connector dependencies")
     for document in [
         root / "SKILL.md",
-        root / "README.md",
+        *root.glob("README*.md"),
         root / "SPEC.md",
         *root.glob("references/*.md"),
         *root.glob("docs/*.md"),
