@@ -1,9 +1,0 @@
-{
-  "mcpServers": {
-    "overwatch-aio": {
-      "command": "uv",
-      "args": ["--directory", "C:/Users/dead4/repo/overwatch-AIO-mcp", "run", "--frozen", "overwatch-aio-mcp", "serve"],
-      "env": {"OW_DB_PATH": "C:/Users/dead4/repo/overwatch-AIO-mcp/data/overwatch.db"}
-    }
-  }
-}

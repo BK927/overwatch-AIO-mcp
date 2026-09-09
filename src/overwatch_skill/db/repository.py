@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import os
 import sqlite3
 import threading
 import time
@@ -32,8 +33,17 @@ def series_key(source: str, filters: dict) -> str:
     return hashlib.sha256(dumps([source, context]).encode()).hexdigest()
 
 
+def resolve_db_path(path: str | Path | None = None) -> Path | str:
+    """Use one per-user store regardless of the working directory or skill location."""
+    selected = path if path is not None else os.getenv("OW_DB_PATH")
+    if selected is None:
+        return Path.home() / ".overwatch-aio-skill" / "overwatch.db"
+    return ":memory:" if str(selected) == ":memory:" else Path(selected).expanduser()
+
+
 class Repository:
-    def __init__(self, path: str | Path = "data/overwatch.db"):
+    def __init__(self, path: str | Path | None = None):
+        path = resolve_db_path(path)
         if str(path) != ":memory:":
             Path(path).parent.mkdir(parents=True, exist_ok=True)
         self._lock = threading.RLock()

@@ -8,10 +8,10 @@ from datetime import UTC, datetime, timedelta
 import httpx2 as httpx
 import pytest
 
-from overwatch_mcp.db import Repository
-from overwatch_mcp.http import HttpClient
-from overwatch_mcp.models import SourceError, SourceResult, utcnow
-from overwatch_mcp.service import Service
+from overwatch_skill.db import Repository
+from overwatch_skill.http import HttpClient
+from overwatch_skill.models import SourceError, SourceResult, utcnow
+from overwatch_skill.service import Service
 
 
 def run(coroutine):

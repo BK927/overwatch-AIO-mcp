@@ -91,7 +91,7 @@ class Service:
     async def call(self, name: str, arguments: dict) -> dict:
         if name not in REQUESTS:
             return error_envelope(
-                SourceError("INVALID_ARGUMENT", "Unknown tool.", "server"), arguments
+                SourceError("INVALID_ARGUMENT", "Unknown operation.", "cli"), arguments
             )
         try:
             request = (
@@ -105,7 +105,7 @@ class Service:
             message = "; ".join(
                 f"{'.'.join(str(x) for x in e['loc'])}: {e['msg']}" for e in exc.errors()
             )
-            return error_envelope(SourceError("INVALID_ARGUMENT", message, "server"), arguments)
+            return error_envelope(SourceError("INVALID_ARGUMENT", message, "cli"), arguments)
         except SourceError as exc:
             if exc.code in ("PARSE_ERROR", "SOURCE_UNAVAILABLE", "RATE_LIMITED"):
                 self.repo.source_record(exc.source, f"{exc.code}: {exc.message}")
@@ -308,7 +308,7 @@ class Service:
             raise SourceError(
                 "INVALID_ARGUMENT",
                 "Comparisons require at least two distinct filter values after alias normalization.",
-                "server",
+                "cli",
             )
         outcomes = await asyncio.gather(
             *(self._single_meta({**filters, dimension: value}) for value in values),
@@ -794,6 +794,6 @@ class Service:
                 "live_spectating": "no_verified_public_source",
                 "client_verification": "local_operator_evidence_only",
             },
-            "server",
+            "cli",
             "local:status",
         )

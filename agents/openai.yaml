@@ -1,0 +1,4 @@
+interface:
+  display_name: "Overwatch AIO Skill"
+  short_description: "오버워치 메타·플레이어·리플레이를 출처와 근거로 조회"
+  default_prompt: "$overwatch-aio-skill 아시아 마스터의 라인하르트 메타와 최신 패치를 출처와 함께 확인해 줘."

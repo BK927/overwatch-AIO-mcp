@@ -7,7 +7,6 @@ from pathlib import Path
 import httpx2 as httpx
 import pytest
 from jsonschema import Draft202012Validator
-from mcp import Client
 from test_korea_sources import JsonClient
 from test_overfast import FakeClient, hero_stats
 from test_registry import ranker_record
@@ -15,16 +14,16 @@ from test_replays_patches import PATCH
 from test_replays_patches import FakeClient as ReplayClient
 from test_service import meta_result
 
-from overwatch_mcp.db import Repository
-from overwatch_mcp.http import HttpClient
-from overwatch_mcp.models import SourceError, utcnow
-from overwatch_mcp.requests import REQUESTS
-from overwatch_mcp.server import create_server, main
-from overwatch_mcp.service import Service
-from overwatch_mcp.sources.overfast import OverFastAdapter
-from overwatch_mcp.sources.owcs_korea import OWCSKoreaAdapter
-from overwatch_mcp.sources.owreplays import OWReplaysAdapter
-from overwatch_mcp.sources.patches import PatchAdapter
+from overwatch_skill.cli import main, query, schemas
+from overwatch_skill.db import Repository
+from overwatch_skill.http import HttpClient
+from overwatch_skill.models import SourceError, utcnow
+from overwatch_skill.requests import REQUESTS
+from overwatch_skill.service import Service
+from overwatch_skill.sources.overfast import OverFastAdapter
+from overwatch_skill.sources.owcs_korea import OWCSKoreaAdapter
+from overwatch_skill.sources.owreplays import OWReplaysAdapter
+from overwatch_skill.sources.patches import PatchAdapter
 
 
 def service_with_http(status=503, payload=None):
@@ -41,59 +40,49 @@ def service_with_http(status=503, payload=None):
 
 
 def validate_result(schema, result, *, status, is_error):
-    payload = result.structured_content
+    payload, code = result
     assert payload["status"] == status
-    assert result.is_error is is_error
+    assert (code != 0) is is_error
+    if is_error:
+        assert code == (
+            2 if payload["error"]["code"] in {"INVALID_ARGUMENT", "UNSUPPORTED_FILTER"} else 1
+        )
     Draft202012Validator(schema).validate(payload)
-    assert len(result.content) == 1
-    assert json.loads(result.content[0].text) == payload
+    assert json.loads(json.dumps(payload, ensure_ascii=False, allow_nan=False)) == payload
     return payload
 
 
-def test_advertised_contracts_reject_missing_fields_and_match_export(monkeypatch, capsys):
-    async def run():
-        async with Client(create_server(db_path=":memory:")) as client:
-            tools = (await client.list_tools()).tools
-        required = {
-            "status",
-            "data",
-            "error",
-            "source",
-            "source_url",
-            "retrieved_at",
-            "source_updated_at",
-            "data_period",
-            "data_patch",
-            "requested_filters",
-            "applied_filters",
-            "warnings",
-            "cached",
-            "stale",
-        }
-        assert {tool.name for tool in tools} == set(REQUESTS)
-        for tool in tools:
-            wire = tool.model_dump(by_alias=True)
-            schema = wire["outputSchema"]
-            Draft202012Validator.check_schema(schema)
-            assert schema["type"] == "object"
-            assert required <= set(schema["required"])
-            assert required <= schema["properties"].keys()
-            assert schema["properties"]["data"]["description"]
-            assert not Draft202012Validator(schema).is_valid({})
-            assert wire["annotations"]["readOnlyHint"] is True
-            assert wire["annotations"]["destructiveHint"] is False
-        return {
-            tool.name: tool.model_dump(
-                mode="json", by_alias=True, exclude_none=True, exclude={"name"}
-            )
-            for tool in tools
-        }
-
-    expected = asyncio.run(run())
-    monkeypatch.setattr("sys.argv", ["overwatch-aio-mcp", "schema"])
-    main()
+def test_advertised_contracts_reject_missing_fields_and_match_export(capsys):
+    expected = schemas()
+    required = {
+        "status",
+        "data",
+        "error",
+        "source",
+        "source_url",
+        "retrieved_at",
+        "source_updated_at",
+        "data_period",
+        "data_patch",
+        "requested_filters",
+        "applied_filters",
+        "warnings",
+        "cached",
+        "stale",
+    }
+    assert set(expected) == set(REQUESTS)
+    for operation in expected.values():
+        schema = operation["outputSchema"]
+        Draft202012Validator.check_schema(operation["inputSchema"])
+        Draft202012Validator.check_schema(schema)
+        assert schema["type"] == "object"
+        assert required <= set(schema["required"])
+        assert required <= schema["properties"].keys()
+        assert schema["properties"]["data"]["description"]
+        assert not Draft202012Validator(schema).is_valid({})
+    assert main(["schema"]) == 0
     assert json.loads(capsys.readouterr().out) == expected
-    checked_in = Path(__file__).resolve().parents[1] / "docs/tool-schemas.json"
+    checked_in = Path(__file__).resolve().parents[1] / "docs/query-schemas.json"
     assert json.loads(checked_in.read_text(encoding="utf-8")) == expected
 
 
@@ -114,22 +103,18 @@ def test_advertised_contracts_reject_missing_fields_and_match_export(monkeypatch
         ("ow_meta", {"matchup": "ramattra"}, 503, None, "INVALID_ARGUMENT"),
     ],
 )
-def test_failures_have_mcp_error_flag_and_valid_structured_content(
-    tool, arguments, status, payload, code
-):
+def test_failures_have_exit_code_and_valid_json(tool, arguments, status, payload, code):
     async def run():
         service = service_with_http(status, payload)
         try:
-            async with Client(create_server(service)) as client:
-                schemas = {t.name: t.output_schema for t in (await client.list_tools()).tools}
-                body = validate_result(
-                    schemas[tool],
-                    await client.call_tool(tool, arguments),
-                    status="error",
-                    is_error=True,
-                )
-                assert body["error"]["code"] == code
-                assert body["requested_filters"] == arguments
+            body = validate_result(
+                schemas()[tool]["outputSchema"],
+                await query(tool, arguments, service=service),
+                status="error",
+                is_error=True,
+            )
+            assert body["error"]["code"] == code
+            assert body["requested_filters"] == arguments
         finally:
             await service.close()
 
@@ -202,7 +187,7 @@ class FreshReplayClient(ReplayClient):
         ("ow_status", {}, [], "ok"),
     ],
 )
-def test_all_tools_and_views_preserve_adapter_data(tool, arguments, upstream, expected):
+def test_all_operations_and_views_preserve_adapter_data(tool, arguments, upstream, expected):
     async def run():
         service = service_with_http()
         service.overfast = OverFastAdapter(FakeClient(*upstream))
@@ -222,22 +207,20 @@ def test_all_tools_and_views_preserve_adapter_data(tool, arguments, upstream, ex
 
         service.call = capture
         try:
-            async with Client(create_server(service)) as client:
-                schema = next(
-                    t.output_schema for t in (await client.list_tools()).tools if t.name == tool
-                )
-                body = validate_result(
-                    schema, await client.call_tool(tool, arguments), status=expected, is_error=False
-                )
-                assert (
-                    body == observed[0]
-                )  # No inserted defaults, coercion or dropped source fields.
-                assert body["requested_filters"] == arguments
-                damaged = {**body, "cached": "false"}
+            schema = schemas()[tool]["outputSchema"]
+            body = validate_result(
+                schema,
+                await query(tool, arguments, service=service),
+                status=expected,
+                is_error=False,
+            )
+            assert body == observed[0]  # No inserted defaults, coercion or dropped source fields.
+            assert body["requested_filters"] == arguments
+            damaged = {**body, "cached": "false"}
+            assert not Draft202012Validator(schema).is_valid(damaged)
+            if tool == "ow_meta" and expected == "ok":
+                damaged = {**body, "data": [{"hero": "reinhardt"}]}
                 assert not Draft202012Validator(schema).is_valid(damaged)
-                if tool == "ow_meta" and expected == "ok":
-                    damaged = {**body, "data": [{"hero": "reinhardt"}]}
-                    assert not Draft202012Validator(schema).is_valid(damaged)
         finally:
             await service.close()
 
@@ -266,29 +249,24 @@ def test_comparison_quality_and_group_failures_preserve_their_meaning(mode, expe
         service.overfast.meta = meta
         arguments = {"view": "map_comparison", "maps": ["kings-row", "ilios"]}
         try:
-            async with Client(create_server(service)) as client:
-                schema = next(
-                    t.output_schema
-                    for t in (await client.list_tools()).tools
-                    if t.name == "ow_meta"
-                )
-                body = validate_result(
-                    schema,
-                    await client.call_tool("ow_meta", arguments),
-                    status=expected,
-                    is_error=is_error,
-                )
-                assert len(body["data"]) == 2
-                assert body["source_status"]["ilios"] == (
-                    "error" if mode in ("partial", "error") else mode
-                )
+            schema = schemas()["ow_meta"]["outputSchema"]
+            body = validate_result(
+                schema,
+                await query("ow_meta", arguments, service=service),
+                status=expected,
+                is_error=is_error,
+            )
+            assert len(body["data"]) == 2
+            assert body["source_status"]["ilios"] == (
+                "error" if mode in ("partial", "error") else mode
+            )
         finally:
             await service.close()
 
     asyncio.run(run())
 
 
-def test_invalid_server_output_becomes_a_structured_internal_error():
+def test_invalid_operation_output_becomes_a_structured_internal_error():
     async def run():
         service = service_with_http()
 
@@ -297,17 +275,12 @@ def test_invalid_server_output_becomes_a_structured_internal_error():
 
         service.call = broken
         try:
-            async with Client(create_server(service)) as client:
-                schema = next(
-                    t.output_schema
-                    for t in (await client.list_tools()).tools
-                    if t.name == "ow_status"
-                )
-                body = validate_result(
-                    schema, await client.call_tool("ow_status", {}), status="error", is_error=True
-                )
-                assert body["error"]["code"] == "INTERNAL_ERROR"
-                assert "private_debug" not in json.dumps(body)
+            schema = schemas()["ow_status"]["outputSchema"]
+            body = validate_result(
+                schema, await query("ow_status", {}, service=service), status="error", is_error=True
+            )
+            assert body["error"]["code"] == "INTERNAL_ERROR"
+            assert "private_debug" not in json.dumps(body)
         finally:
             await service.close()
 
@@ -326,20 +299,15 @@ def test_empty_esports_release_preserves_unknown_coverage():
             manifest["counts"][key] = 0
         service.esports = OWCSKoreaAdapter(upstream)
         try:
-            async with Client(create_server(service)) as client:
-                schema = next(
-                    t.output_schema
-                    for t in (await client.list_tools()).tools
-                    if t.name == "ow_esports"
-                )
-                body = validate_result(
-                    schema,
-                    await client.call_tool("ow_esports", {"view": "matches"}),
-                    status="empty",
-                    is_error=False,
-                )
-                assert body["data"]["coverage_period"] is None
-                assert body["data"]["data_until"] is None
+            schema = schemas()["ow_esports"]["outputSchema"]
+            body = validate_result(
+                schema,
+                await query("ow_esports", {"view": "matches"}, service=service),
+                status="empty",
+                is_error=False,
+            )
+            assert body["data"]["coverage_period"] is None
+            assert body["data"]["data_until"] is None
         finally:
             await service.close()
 

@@ -5,8 +5,8 @@ from datetime import UTC, date, datetime
 
 from bs4 import BeautifulSoup
 
-from overwatch_mcp.models import SourceError, SourceResult
-from overwatch_mcp.sources.owreplays import slug
+from overwatch_skill.models import SourceError, SourceResult
+from overwatch_skill.sources.owreplays import slug
 
 BASE_URL = "https://overwatch.blizzard.com"
 

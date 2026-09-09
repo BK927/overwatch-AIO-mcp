@@ -4,9 +4,9 @@ import time
 import httpx2 as httpx
 import pytest
 
-from overwatch_mcp.db import Repository
-from overwatch_mcp.http import HttpClient
-from overwatch_mcp.models import SourceError, SourceResult
+from overwatch_skill.db import Repository
+from overwatch_skill.http import HttpClient
+from overwatch_skill.models import SourceError, SourceResult
 
 
 def test_cache_retains_original_retrieval_and_stale_failure():

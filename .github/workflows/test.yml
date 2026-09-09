@@ -18,5 +18,6 @@ jobs:
       - run: uv sync --locked --extra dev
       - run: uv run --frozen --extra dev ruff check src tests scripts
       - run: uv run --frozen --extra dev ruff format --check src tests scripts
+      - run: uv run --frozen --extra dev python scripts/validate_skill.py
       - run: uv run --frozen --extra dev pytest -q
       - run: uv build

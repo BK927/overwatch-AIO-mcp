@@ -4,8 +4,8 @@ from urllib.parse import urlencode
 
 import pytest
 
-from overwatch_mcp.models import SourceError
-from overwatch_mcp.normalization import (
+from overwatch_skill.models import SourceError
+from overwatch_skill.normalization import (
     battle_tag_from_id,
     normalize_hero,
     normalize_map,
@@ -13,7 +13,7 @@ from overwatch_mcp.normalization import (
     normalize_region,
     normalize_tier,
 )
-from overwatch_mcp.sources.overfast import BASE_URL, OverFastAdapter
+from overwatch_skill.sources.overfast import BASE_URL, OverFastAdapter
 
 
 class FakeClient:

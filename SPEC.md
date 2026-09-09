@@ -1,10 +1,10 @@
-# Overwatch AIO MCP 구현 명세
+# Overwatch AIO Skill 구현 명세
 
 ## 범위와 계약
 
-원본 설계의 Phase 1–3을 하나의 Python 패키지로 구현한다. MCP에는 조회 도구 10개만 노출한다. 근거 등록, 실제 재생 확인 기록, 수집 스케줄 관리는 로컬 CLI로 분리한다. 공개 출처에 없는 정보는 추정하지 않는다.
+저장소 루트를 하나의 설치 가능한 Codex 스킬로 구성한다. Python 패키지는 `overwatch_skill`, 배포 패키지와 CLI는 `overwatch-aio-skill`, 버전은 `0.2.0`이다. 10개 조회와 명시적인 근거 관리 명령을 요청 시 실행한다. MCP·정기 수집·예약 실행은 포함하지 않는다. 공개 출처에 없는 정보는 추정하지 않는다.
 
-정확한 도구 입력·출력 JSON Schema와 annotations는 `docs/tool-schemas.json`, SQLite DDL은 `src/overwatch_mcp/db/schema.sql`, 랭커 입력 형식은 `Registry`의 Pydantic 모델 및 `docs/curation.md`를 따른다. 도구 스키마는 `uv run overwatch-aio-mcp schema --output docs/tool-schemas.json`으로 실제 `tools/list` 정의에서 재생성한다.
+정확한 조회 입력·출력 JSON Schema는 `docs/query-schemas.json`, SQLite DDL은 `src/overwatch_skill/db/schema.sql`, 랭커 입력 형식은 `Registry`의 Pydantic 모델 및 `docs/curation.md`를 따른다. 조회 스키마는 `uv run overwatch-aio-skill schema --output docs/query-schemas.json`으로 REQUESTS/RESPONSES 모델에서 재생성한다.
 
 모든 도구는 `status`, `data`, `error`, `source`, `source_url`, `retrieved_at`, `source_updated_at`, `data_period`, `data_patch`, `requested_filters`, `applied_filters`, `warnings`, `cached`, `stale`를 반환한다. `requested_filters`는 입력 조건, `applied_filters`는 실제 적용 범위이다. 여러 소스 또는 페이지를 사용한 결과는 개별 행/그룹의 출처와 관측 시점도 확인해야 한다.
 
@@ -14,8 +14,8 @@
 - `EMPTY_RESULT`는 정상 조회의 결과 없음이다. API 장애나 파싱 실패를 빈 배열로 숨기지 않는다.
 - `PRIVATE_PROFILE`, `UNSUPPORTED_FILTER`, `SOURCE_UNAVAILABLE`, `PARSE_ERROR`, `RATE_LIMITED`, `STALE_DATA`, `PARTIAL_RESULT`, 입력 오류 `INVALID_ARGUMENT`를 구분한다.
 - 지역 비교 일부 실패는 개별 오류와 성공 그룹을 함께 반환한다. 다른 출처 간 수치 차이는 자동 계산하지 않는다.
-- 모든 도구는 `responses.py`의 공통 필수 필드·도구별 데이터 구조를 `outputSchema`로 광고하고, 반환 전에 검증한다. 출처별 확장 필드와 기존 값·필드 생략 여부는 보존한다. `structuredContent`와 JSON 텍스트에는 동일한 본문을 담는다.
-- `status=error`일 때만 MCP `isError=true`다. `empty`, `stale`, `partial`은 데이터 품질 상태로 유지하며 호출 실패로 바꾸지 않는다. 비교 전체 실패는 그룹별 오류를 보존한 채 `isError=true`로 반환한다. 내부 출력 계약 위반은 구조화된 `INTERNAL_ERROR`로 반환한다.
+- 모든 도구는 `responses.py`의 공통 필수 필드·도구별 데이터 구조를 `schema` 명령의 `outputSchema`로 제공하고, 반환 전에 검증한다. 출처별 확장 필드와 기존 값·필드 생략 여부는 보존한다. 표준출력에 검증된 JSON 하나를 반환하며 로그는 표준오류로 분리한다.
+- 종료 코드는 정상·빈 결과·오래된 캐시·일부 성공 `0`, 실행 실패 `1`, 입력 오류(`INVALID_ARGUMENT`, `UNSUPPORTED_FILTER`) `2`다. 비교 전체 실패는 그룹별 오류를 보존하며 `1`을 반환한다. 내부 출력 계약 위반은 구조화된 `INTERNAL_ERROR`로 반환한다.
 
 ## 도구
 
@@ -57,9 +57,9 @@ OverFast는 GRANDMASTER 집계에 CHAMPION이 포함됨을 표시한다. OWTICS�
 
 ## 저장과 이력
 
-SQLite WAL·foreign key·트랜잭션을 사용한다. 주요 테이블은 `players`, `player_evidence`, `leaderboard_snapshots`, `player_hero_tags`, `replays`, `replay_evidence`, `replay_validations`, `compatibility_notices`, `hero_meta_snapshots`, `http_cache`, `source_status`다. 수집기는 `collection_jobs`에 실행 시각과 lease를 저장한다.
+SQLite WAL·foreign key·트랜잭션을 사용한다. 주요 테이블은 `players`, `player_evidence`, `leaderboard_snapshots`, `player_hero_tags`, `replays`, `replay_evidence`, `replay_validations`, `compatibility_notices`, `hero_meta_snapshots`, `http_cache`, `source_status`다. 새 DB에는 `collection_jobs`를 만들지 않는다. 기존 DB의 해당 테이블은 그대로 두고 사용하지 않는다. DB는 `--db` → `OW_DB_PATH` → `~/.overwatch-aio-skill/overwatch.db` 순서로 결정하며 자동 데이터 이동이나 삭제 마이그레이션은 없다.
 
-메타는 실제 적용된 출처·지역·모드·플랫폼·맵·티어·역할을 기준으로 시계열을 분리한다. 영웅 선택/출력 순서는 시계열을 분할하지 않는다. 동일 응답의 캐시 재사용은 새 스냅샷을 만들지 않는다. `history`는 저장된 집계값 사이의 차이이며 해당 주에 플레이한 실제 매치들의 승률이 아니다. 오래된 데이터가 없으면 소급 생성하지 않는다.
+메타는 요청 시에만 관측·저장한다. 실제 적용된 출처·지역·모드·플랫폼·맵·티어·역할을 기준으로 시계열을 분리한다. 영웅 선택/출력 순서는 시계열을 분할하지 않는다. 동일 응답의 캐시 재사용은 새 스냅샷을 만들지 않는다. `history`는 저장된 집계값 사이의 차이이며 해당 주에 플레이한 실제 매치들의 승률이 아니다. 오래된 데이터가 없으면 소급 생성하지 않는다.
 
 원본 HTTP 응답과 헤더는 SQLite cache에 함께 보존한다. 최대 256개·64 MiB·7일의 원본 캐시 제한이 있다. 단일 응답은 12 MiB, HTTP 동시 요청은 4개, 출처별 요청은 직렬화한다. 429/일부 5xx는 최대 두 번 재시도하며 4xx·파싱 오류에 오래된 성공을 대신 표시하지 않는다.
 
@@ -69,14 +69,14 @@ SQLite WAL·foreign key·트랜잭션을 사용한다. 주요 테이블은 `play
 
 리플레이 새로고침은 출처 관측만 갱신한다. 로컬 player link·검증·지역 증거는 별도 테이블에 남는다. 같은 표시 이름으로 자동 연결하지 않는다. `discover-rankers`는 저장된 공개 고티어 리플레이에서 검토할 미확인 후보를 제시할 뿐, 한국인이나 Top 500으로 등록하지 않는다.
 
-재생 상태는 `unverified`, `source_reports_expired`, `user_reported_working`, `client_verified`, `needs_recheck`다. `client_verified`는 로컬 운영자가 실제 확인의 시점·보고자·증거 참조를 기록할 때만 생성한다. 명확한 코드 무효화 패치는 이전 검증을 `needs_recheck`로 바꾸며, 불명확한 공지나 단순 패치 발행만으로 만료를 확정하지 않는다.
+재생 상태는 `unverified`, `source_reports_expired`, `user_reported_working`, `client_verified`, `needs_recheck`다. `client_verified`는 로컬 운영자가 실제 확인의 시점·보고자·증거 참조를 기록할 때만 생성한다. `ow_patches` 조회에서 확인한 명확한 코드 무효화 패치는 이전 검증을 `needs_recheck`로 바꾸며, 불명확한 공지나 단순 패치 발행만으로 만료를 확정하지 않는다.
 
-## 수집과 배포
+## 실행과 설치
 
-`collect --config ... --once`는 도래한 작업만 실행한다. 같은 명령을 systemd timer에서 호출하거나 `--once` 없이 계속 실행할 수 있다. 최대 32개 관심 작업만 허용하고 모든 조합을 자동 확장하지 않는다. 작업마다 최대 5분 제한, 저장된 다음 실행 시점, 중복 수집 방지 lease를 둔다. 샘플은 리플레이 30m, 메타 1h, 패치 6h, catalog/OWCS 24h다. 관심 플레이어는 `ow_player_get` 작업을 43200초 주기로 추가한다.
+`overwatch-aio-skill query <operation> --input-file <경로 또는 ->`로 한 작업을 실행한다. 파일 생략은 빈 객체, `-`는 표준입력이다. UTF-8 BOM을 허용하고 잘못된 JSON이나 객체가 아닌 입력은 `2`로 반환한다. 작업 폴더를 바꾸지 않는 `uv run --frozen --no-dev --project <skill-root>`를 사용할 수 있다.
 
-stdio를 기본으로 하고 Streamable HTTP는 기본 `127.0.0.1:8765/mcp`에서 실행한다. 외부 연결은 운영자가 인증된 HTTPS reverse proxy/tunnel을 구성해야 한다. 이 저장소에는 실행·수집 systemd 예제를 포함하되 현재 컴퓨터나 원격 파이에 자동 설치하지 않는다.
+스킬 자동 선택을 허용한다. 핵심 분기·근거 규칙은 `SKILL.md`, 상세 조회는 `references/queries.md`, 근거 등록은 `docs/curation.md`에서 설명한다. 개인 설치는 GitHub에 게시한 커밋의 루트를 Skill Installer로 복사한다. 사용자 DB·캐시·개발 환경은 배포하지 않으며 설치 후 실행 의존성을 별도로 준비한다.
 
 ## 완료 판정
 
-입력 스키마·MCP handshake/도구 호출·지역 fallback·백분율/sentinel·개인 정보 공개 상태·출처 파싱·근거 링크·검증 보존·패치 재검증·집계 이력·일부 실패·수집 due state를 회귀 테스트한다. 공개 소스 live smoke는 별도 opt-in으로 수행한다. 실시간 Top 500 관전, 전체 한국 랭커 완전 수집, 실제 게임 클라이언트 자동 재생 검사는 검증된 공개 경로가 없어 제공하지 않는다.
+기존 출처·필터·비율·캐시·근거 보존 테스트와 CLI 입력/출력 계약을 검증한다. 별도 프로세스의 JSON·종료 코드, 다른 작업 폴더, 한글/BOM 입력, 기본 DB 공유, 기존 DB 호환성을 검사한다. MCP 없이 조회·스키마 생성·패키지 빌드가 성공해야 한다. Windows/Linux × Python 3.11/3.13 CI에 스킬 형식 검증을 포함한다. 공개 소스 live smoke는 별도 opt-in으로 수행한다.

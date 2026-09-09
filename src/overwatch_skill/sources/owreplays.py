@@ -8,7 +8,7 @@ import re
 import unicodedata
 from datetime import UTC, datetime
 
-from overwatch_mcp.models import SourceError, SourceResult
+from overwatch_skill.models import SourceError, SourceResult
 
 BASE_URL = "https://owreplays.tv"
 TIERS = (

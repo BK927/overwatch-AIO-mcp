@@ -5,9 +5,10 @@ import asyncio
 import json
 from pathlib import Path
 
-from overwatch_mcp.db import Repository
-from overwatch_mcp.models import utcnow
-from overwatch_mcp.service import Service
+from overwatch_skill.cli import query
+from overwatch_skill.db import Repository
+from overwatch_skill.models import utcnow
+from overwatch_skill.service import Service
 
 
 async def check(output: str | None) -> int:
@@ -57,7 +58,7 @@ async def check(output: str | None) -> int:
     reports = []
     try:
         for label, tool, arguments in cases:
-            result = await service.call(tool, arguments)
+            result, code = await query(tool, arguments, service=service)
             data = result["data"]
             count = (
                 len(data)
@@ -70,6 +71,7 @@ async def check(output: str | None) -> int:
                 "check": label,
                 "tool": tool,
                 "status": result["status"],
+                "exit_code": code,
                 "count": count,
                 "source": result["source"],
                 "source_url": result["source_url"],

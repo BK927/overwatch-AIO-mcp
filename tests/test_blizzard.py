@@ -6,8 +6,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from overwatch_mcp.models import SourceError
-from overwatch_mcp.sources.blizzard import BlizzardAdapter
+from overwatch_skill.models import SourceError
+from overwatch_skill.sources.blizzard import BlizzardAdapter
 
 FORM = """
 <select id="filter-rq-select"><option value="81">Quick Play - Role Queue</option>

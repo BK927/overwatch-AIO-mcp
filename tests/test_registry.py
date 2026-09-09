@@ -4,8 +4,8 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from pydantic import ValidationError
 
-from overwatch_mcp.db import Repository
-from overwatch_mcp.registry import Evidence, Leaderboard, Registry
+from overwatch_skill.db import Repository
+from overwatch_skill.registry import Evidence, Leaderboard, Registry
 
 
 def evidence(kind, value, *, confidence="verified", day="2026-01-01", source_url=None):

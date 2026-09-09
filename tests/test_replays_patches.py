@@ -6,9 +6,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from overwatch_mcp.models import SourceError
-from overwatch_mcp.sources.owreplays import OWReplaysAdapter
-from overwatch_mcp.sources.patches import PatchAdapter
+from overwatch_skill.models import SourceError
+from overwatch_skill.sources.owreplays import OWReplaysAdapter
+from overwatch_skill.sources.patches import PatchAdapter
 
 CATALOG = {
     "heroes": [{"ID": 19, "hero": "Reinhardt"}, {"ID": 8, "hero": "Genji"}],

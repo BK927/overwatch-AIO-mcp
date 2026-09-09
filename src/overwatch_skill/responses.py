@@ -27,7 +27,7 @@ class OutputError(OutputModel):
 
 class Response(OutputModel, Generic[Data]):
     status: Status = Field(
-        description="ok: success; empty: no matches; stale: old data; partial: some groups failed; error: the operation failed. Only error sets MCP isError=true."
+        description="ok: success; empty: no matches; stale: old data; partial: some groups failed; error: the operation failed. CLI exits 0 for ok/empty/stale/partial, 1 for execution failure and 2 for invalid input."
     )
     data: Data | None = Field(description="Tool-specific result; null when unavailable.")
     error: OutputError | None = Field(

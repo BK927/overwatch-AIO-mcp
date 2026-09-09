@@ -11,9 +11,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from overwatch_mcp.models import SourceError
-from overwatch_mcp.sources.owcs_korea import LATEST_RELEASE, MAX_ASSET_BYTES, OWCSKoreaAdapter
-from overwatch_mcp.sources.owtics import OwticsAdapter, decode_loader
+from overwatch_skill.models import SourceError
+from overwatch_skill.sources.owcs_korea import LATEST_RELEASE, MAX_ASSET_BYTES, OWCSKoreaAdapter
+from overwatch_skill.sources.owtics import OwticsAdapter, decode_loader
 
 FETCHED = "2026-09-09T00:00:00+00:00"
 SEASON = {"id": "season-test", "season": 24, "displaySeason": 4, "era": "OW", "isMidseason": False}

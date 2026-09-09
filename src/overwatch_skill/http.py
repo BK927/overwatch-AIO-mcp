@@ -41,7 +41,7 @@ class HttpClient:
             follow_redirects=True,
             limits=httpx.Limits(max_connections=4, max_keepalive_connections=4),
             headers={
-                "User-Agent": "Overwatch-AIO-MCP/0.1 (public-data research)",
+                "User-Agent": "Overwatch-AIO-Skill/0.2.0 (public-data research)",
                 "Accept": "application/json,text/html;q=0.9",
             },
         )
