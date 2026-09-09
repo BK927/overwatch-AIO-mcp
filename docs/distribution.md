@@ -16,7 +16,7 @@ The [skills.sh FAQ](https://www.skills.sh/docs/faq) describes automatic listing 
 
 The release bundle uses the [MCPB UV runtime](https://github.com/anthropics/mcpb/blob/main/MANIFEST.md). A compatible host must support manifest version 0.4 and UV server configuration. Source-based stdio/HTTP installation remains available for other clients.
 
-The manifest declares the exact `uv` command, the `mcp` extra, and ten tools. It uses the same DB selection and server entrypoint as the source install. Dependencies are prepared on first launch; the bundle does not include a virtual environment or user's data. Windows and Linux are covered by CI.
+The manifest declares the exact `uv` command, the `mcp` extra, and ten tools. It installs the runtime package with `--no-editable` so Python 3.11 does not rely on a locale-decoded source-path file for non-ASCII installation directories. It uses the same DB selection and server entrypoint as the source install. Dependencies are prepared on first launch; the bundle does not include a virtual environment or user's data. Windows and Linux are covered by CI.
 
 Build from the intended release checkout:
 

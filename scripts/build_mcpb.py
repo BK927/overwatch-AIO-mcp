@@ -63,6 +63,7 @@ def build(root: Path, output: Path) -> tuple[Path, Path]:
                     "run",
                     "--frozen",
                     "--no-dev",
+                    "--no-editable",
                     "--extra",
                     "mcp",
                     "--project",

@@ -13,7 +13,7 @@
     {
       "registryType": "mcpb",
       "identifier": "https://github.com/BK927/overwatch-aio/releases/download/v0.3.1/overwatch-aio-0.3.1.mcpb",
-      "fileSha256": "8d11b4893de80cafffe15afd9fff85aea36cbbc54f2f1e905310b5ca712f0559",
+      "fileSha256": "845d9718bc722359408e87e609b2b026bf80a5ad990d5dcba4252ad64b9fb86f",
       "transport": {
         "type": "stdio"
       }
