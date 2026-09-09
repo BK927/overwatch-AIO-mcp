@@ -6,6 +6,8 @@ An **Overwatch MCP server and standalone agent skill** for hero meta, public pla
 
 Built with **Python 3.11+ and uv**. Choose the skill, MCP, or both. Data is fetched on request; no scheduled collector is started.
 
+[Download releases](https://github.com/BK927/overwatch-aio/releases) · [Distribution and registry guide](docs/distribution.md)
+
 ## Choose an interface
 
 | Interface | Use it for | Installation |
@@ -47,6 +49,8 @@ Example requests:
 - “Explain Reinhardt's latest patch changes alongside OWCS Korea data.”
 
 ## Install the MCP server
+
+MCPB-compatible clients supporting the UV runtime (manifest 0.4) can install the `.mcpb` file from a GitHub release. Dependencies are prepared at first launch. The source installation below works with clients using ordinary stdio or Streamable HTTP configuration.
 
 Clone the repository or use an installed skill directory. Replace `<project-directory>` with its absolute path:
 

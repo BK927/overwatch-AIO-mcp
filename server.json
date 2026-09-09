@@ -1,0 +1,22 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.BK927/overwatch-aio",
+  "title": "Overwatch AIO MCP",
+  "description": "Overwatch hero meta, player statistics, replays, patches and OWCS Korea with sources and evidence.",
+  "repository": {
+    "url": "https://github.com/BK927/overwatch-aio",
+    "source": "github"
+  },
+  "version": "0.3.1",
+  "websiteUrl": "https://github.com/BK927/overwatch-aio",
+  "packages": [
+    {
+      "registryType": "mcpb",
+      "identifier": "https://github.com/BK927/overwatch-aio/releases/download/v0.3.1/overwatch-aio-0.3.1.mcpb",
+      "fileSha256": "8d11b4893de80cafffe15afd9fff85aea36cbbc54f2f1e905310b5ca712f0559",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

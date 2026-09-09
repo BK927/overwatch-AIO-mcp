@@ -2,6 +2,8 @@
 
 [English](README.md) | **한국어**
 
+[배포 파일](https://github.com/BK927/overwatch-aio/releases) · [배포·목록 등록 안내](docs/distribution.md)
+
 오버워치 공개 자료를 출처와 근거를 보존하면서 조회합니다. 영웅 메타, 플레이어 통계, 랭커 명부, 리플레이, 공식 패치, OWCS Korea를 **스킬 또는 MCP**로 사용할 수 있습니다. 두 방식은 같은 조회 기능 10개와 데이터 처리 코드를 공유합니다.
 
 Python 3.11 이상과 `uv`를 사용하며 조회 결과와 근거는 SQLite에 저장합니다. 두 방식 모두 요청할 때 데이터를 가져옵니다. 정기 수집·예약 실행은 제공하지 않습니다.
@@ -38,6 +40,8 @@ uv sync --frozen --no-dev --project "<설치된 스킬 폴더>"
 기본 설치 위치는 `~/.codex/skills/overwatch-aio-skill`입니다. 설치한 다음 턴부터 `$overwatch-aio-skill`로 부르거나 오버워치 데이터 질문을 통해 자동 선택할 수 있습니다. 설치 시 배포된 소스만 복사하며 개발 환경·캐시·사용자 DB는 포함하지 않습니다. 이후 준비하는 `.venv`는 실행 의존성만 담는 런타임입니다.
 
 ## MCP 설치와 연결
+
+UV 런타임과 MCPB manifest 0.4를 지원하는 클라이언트는 GitHub Release의 `.mcpb` 파일로 설치할 수 있습니다. 첫 실행 시 의존성을 준비합니다. 일반 stdio·HTTP 연결에는 아래 소스 설치 방식을 사용합니다.
 
 저장소를 복제하거나 이미 설치한 스킬 폴더를 사용합니다. 아래 `<프로젝트 폴더>`는 `pyproject.toml`이 있는 폴더의 절대 경로로 바꿉니다.
 

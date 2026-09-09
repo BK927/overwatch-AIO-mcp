@@ -2,7 +2,7 @@
 
 ## 범위와 계약
 
-저장소 루트를 하나의 설치 가능한 Codex 스킬로 유지하면서 독립적인 MCP 서버를 선택 제공한다. Python 패키지는 `overwatch_skill`, 배포 패키지와 스킬 CLI는 `overwatch-aio-skill`, MCP CLI는 `overwatch-aio-mcp`, 버전은 `0.3.0`이다. 두 인터페이스는 공통 실행 계층의 입력·출력 검증, 10개 조회와 저장소를 공유한다. 스킬은 MCP SDK 없이 실행하며 MCP는 `mcp` 선택 의존성을 설치한다. 정기 수집·예약 실행은 포함하지 않는다. 공개 출처에 없는 정보는 추정하지 않는다.
+저장소 루트를 하나의 설치 가능한 Codex 스킬로 유지하면서 독립적인 MCP 서버를 선택 제공한다. Python 패키지는 `overwatch_skill`, 배포 패키지와 스킬 CLI는 `overwatch-aio-skill`, MCP CLI는 `overwatch-aio-mcp`, 버전은 `0.3.1`이다. 두 인터페이스는 공통 실행 계층의 입력·출력 검증, 10개 조회와 저장소를 공유한다. 스킬은 MCP SDK 없이 실행하며 MCP는 `mcp` 선택 의존성을 설치한다. 정기 수집·예약 실행은 포함하지 않는다. 공개 출처에 없는 정보는 추정하지 않는다.
 
 정확한 조회 입력·출력 JSON Schema는 `docs/query-schemas.json`, SQLite DDL은 `src/overwatch_skill/db/schema.sql`, 랭커 입력 형식은 `Registry`의 Pydantic 모델 및 `docs/curation.md`를 따른다. 조회 스키마는 `uv run overwatch-aio-skill schema --output docs/query-schemas.json`으로 REQUESTS/RESPONSES 모델에서 재생성한다.
 

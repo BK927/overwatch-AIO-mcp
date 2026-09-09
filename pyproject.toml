@@ -1,6 +1,6 @@
 [project]
 name = "overwatch-aio-skill"
-version = "0.3.0"
+version = "0.3.1"
 description = "On-demand Overwatch skill and optional MCP server with provenance and evidence management"
 keywords = ["overwatch", "mcp", "mcp-server", "model-context-protocol", "agent-skills", "codex"]
 readme = "README.md"
