@@ -15,8 +15,8 @@ overwatch-aio-skill = "overwatch_skill.cli:main"
 overwatch-aio-mcp = "overwatch_skill.mcp_cli:main"
 
 [project.urls]
-Repository = "https://github.com/BK927/overwatch-aio-skill"
-Documentation = "https://github.com/BK927/overwatch-aio-skill#readme"
+Repository = "https://github.com/BK927/overwatch-aio"
+Documentation = "https://github.com/BK927/overwatch-aio#readme"
 
 [build-system]
 requires = ["hatchling"]

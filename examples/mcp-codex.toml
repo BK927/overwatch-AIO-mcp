@@ -1,8 +1,8 @@
 # Replace the project path with your absolute checkout or installed skill path.
-# On Windows, forward slashes work: C:/path/to/overwatch-aio-skill
+# On Windows, forward slashes work: C:/path/to/overwatch-aio
 [mcp_servers.overwatch-aio]
 command = "uv"
-args = ["run", "--frozen", "--no-dev", "--extra", "mcp", "--project", "/absolute/path/to/overwatch-aio-skill", "overwatch-aio-mcp", "serve"]
+args = ["run", "--frozen", "--no-dev", "--extra", "mcp", "--project", "/absolute/path/to/overwatch-aio", "overwatch-aio-mcp", "serve"]
 startup_timeout_sec = 30
 
 # Optional: share an existing database explicitly.

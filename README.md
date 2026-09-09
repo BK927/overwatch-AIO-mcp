@@ -18,12 +18,12 @@ Python 3.11 이상과 `uv`를 사용하며 조회 결과와 근거는 SQLite에 
 
 Codex에서 Skill Installer에 아래와 같이 요청할 수 있습니다.
 
-> BK927/overwatch-aio-skill 저장소 루트의 스킬을 overwatch-aio-skill 이름으로 설치해 줘. 원하는 커밋을 지정했다면 그 커밋을 사용해 줘.
+> BK927/overwatch-aio 저장소 루트의 스킬을 overwatch-aio-skill 이름으로 설치해 줘. 원하는 커밋을 지정했다면 그 커밋을 사용해 줘.
 
 Skill Installer를 직접 사용하는 경우(경로는 사용자의 Codex 설치에 맞게 조정):
 
 ```text
-python <Codex skills>/.system/skill-installer/scripts/install-skill-from-github.py --repo BK927/overwatch-aio-skill --path . --name overwatch-aio-skill --ref <커밋 SHA>
+python <Codex skills>/.system/skill-installer/scripts/install-skill-from-github.py --repo BK927/overwatch-aio --path . --name overwatch-aio-skill --ref <커밋 SHA>
 uv sync --frozen --no-dev --project "<설치된 스킬 폴더>"
 ```
 
@@ -34,7 +34,7 @@ uv sync --frozen --no-dev --project "<설치된 스킬 폴더>"
 저장소를 복제하거나 이미 설치한 스킬 폴더를 사용합니다. 아래 `<프로젝트 폴더>`는 `pyproject.toml`이 있는 폴더의 절대 경로로 바꿉니다.
 
 ```text
-git clone https://github.com/BK927/overwatch-aio-skill.git
+git clone https://github.com/BK927/overwatch-aio.git
 uv sync --frozen --no-dev --extra mcp --project "<프로젝트 폴더>"
 uv run --frozen --no-dev --extra mcp --project "<프로젝트 폴더>" overwatch-aio-mcp serve
 ```
@@ -100,7 +100,7 @@ uv run --frozen --no-dev --project "<스킬 폴더>" overwatch-aio-skill --db "D
 
 HTTP 캐시는 최대 256개·64 MiB·7일 범위로 보관합니다. 명부·리플레이 연결·재생 검증 근거는 별도 테이블에 두어 공개 출처 새로고침으로 덮어쓰지 않습니다. [근거 관리 명령](docs/curation.md)은 사용자가 제공한 실제 근거를 등록할 때 사용합니다.
 
-GitHub 주소는 `BK927/overwatch-aio-skill`, 배포 패키지와 스킬 이름은 `overwatch-aio-skill`로 유지합니다. 0.2.0 스킬 사용자는 기존 명령을 계속 사용합니다. 0.1.x MCP 사용자는 위 예제처럼 프로젝트 경로와 `--extra mcp`를 갱신하고 `overwatch-aio-mcp serve`를 사용합니다. 이전 `data/overwatch.db`를 계속 쓰려면 절대 경로로 지정합니다. 제거된 정기 수집 명령은 복원하지 않았습니다.
+GitHub 주소를 `BK927/overwatch-aio`로 변경했습니다. 배포 패키지와 스킬 이름은 `overwatch-aio-skill`로 유지합니다. 0.2.0 스킬 사용자는 기존 명령을 계속 사용합니다. 0.1.x MCP 사용자는 위 예제처럼 프로젝트 경로와 `--extra mcp`를 갱신하고 `overwatch-aio-mcp serve`를 사용합니다. 이전 `data/overwatch.db`를 계속 쓰려면 절대 경로로 지정합니다. 제거된 정기 수집 명령은 복원하지 않았습니다.
 
 ## 자료의 한계
 
