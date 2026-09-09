@@ -7,7 +7,7 @@ import httpx2 as httpx
 from test_overfast import FakeClient
 from test_service import meta_result
 
-from overwatch_skill import cli
+from overwatch_skill import cli, execution
 from overwatch_skill.http import HttpClient
 from overwatch_skill.models import SourceError
 from overwatch_skill.service import Service
@@ -57,5 +57,5 @@ def fixture_service(repository):
     return service
 
 
-cli.Service = fixture_service
+execution.Service = fixture_service
 raise SystemExit(cli.main(sys.argv[2:]))
