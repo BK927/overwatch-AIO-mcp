@@ -1,7 +1,9 @@
 """Validate advertised output contracts against real dispatch and adapter fixtures."""
 
 import asyncio
+import importlib.util
 import json
+import sys
 from pathlib import Path
 
 import httpx2 as httpx
@@ -24,6 +26,29 @@ from overwatch_skill.sources.overfast import OverFastAdapter
 from overwatch_skill.sources.owcs_korea import OWCSKoreaAdapter
 from overwatch_skill.sources.owreplays import OWReplaysAdapter
 from overwatch_skill.sources.patches import PatchAdapter
+
+
+@pytest.fixture(autouse=True, params=["cli", "mcp"] if importlib.util.find_spec("mcp") else ["cli"])
+def query_boundary(request, monkeypatch):
+    """Run the same upstream fixtures through both real public query boundaries."""
+    if request.param == "mcp":
+        from mcp import Client
+
+        from overwatch_skill.execution import exit_code
+        from overwatch_skill.server import create_server
+
+        async def mcp_query(name, arguments, *, service=None, db_path=None):
+            async with Client(create_server(service, db_path)) as client:
+                tools = {tool.name: tool for tool in (await client.list_tools()).tools}
+                assert tools[name].input_schema == schemas()[name]["inputSchema"]
+                assert tools[name].output_schema == schemas()[name]["outputSchema"]
+                result = await client.call_tool(name, arguments)
+                body = result.structured_content
+                assert json.loads(result.content[0].text) == body
+                assert result.is_error is (body["status"] == "error")
+                return body, exit_code(body)
+
+        monkeypatch.setattr(sys.modules[__name__], "query", mcp_query)
 
 
 def service_with_http(status=503, payload=None):

@@ -12,6 +12,7 @@ dev = ["pytest>=8,<10", "ruff>=0.12,<1", "jsonschema>=4.23,<5", "pyyaml>=6,<7"]
 
 [project.scripts]
 overwatch-aio-skill = "overwatch_skill.cli:main"
+overwatch-aio-mcp = "overwatch_skill.mcp_cli:main"
 
 [project.urls]
 Repository = "https://github.com/BK927/overwatch-aio-skill"

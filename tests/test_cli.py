@@ -1,6 +1,5 @@
 """Exercise installed entrypoints, process IO, persistence and migration compatibility."""
 
-import importlib.util
 import json
 import os
 import sqlite3
@@ -54,8 +53,7 @@ def run_cli(args, cwd, environment, *, input=None, scenario=None, console=False)
     return result, body
 
 
-def test_console_entrypoint_without_mcp_from_another_directory(tmp_path, environment):
-    assert importlib.util.find_spec("mcp") is None
+def test_console_entrypoint_from_another_directory(tmp_path, environment):
     process, body = run_cli(["query", "ow_status"], tmp_path, environment, console=True)
     assert process.returncode == 0
     assert process.stderr == ""
