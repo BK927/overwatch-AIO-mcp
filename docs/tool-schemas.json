@@ -61,6 +61,219 @@
       },
       "title": "CatalogRequest",
       "type": "object"
+    },
+    "outputSchema": {
+      "$defs": {
+        "CatalogItem": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "properties": {
+            "key": {
+              "description": "Source identifier for the hero, map, mode, tier or region.",
+              "title": "Key",
+              "type": "string"
+            }
+          },
+          "required": [
+            "key"
+          ],
+          "title": "CatalogItem",
+          "type": "object"
+        },
+        "JsonValue": {},
+        "OutputError": {
+          "additionalProperties": false,
+          "properties": {
+            "code": {
+              "description": "Machine-readable error or result-quality code.",
+              "title": "Code",
+              "type": "string"
+            },
+            "message": {
+              "description": "Explanation of the failure, empty result or data limitation.",
+              "title": "Message",
+              "type": "string"
+            }
+          },
+          "required": [
+            "code",
+            "message"
+          ],
+          "title": "OutputError",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "description": "ok: success; empty: no matches; stale: old data; partial: some groups failed; error: the operation failed. Only error sets MCP isError=true.",
+          "enum": [
+            "ok",
+            "empty",
+            "stale",
+            "partial",
+            "error"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "data": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/CatalogItem"
+              },
+              "type": "array"
+            },
+            {
+              "additionalProperties": {
+                "$ref": "#/$defs/JsonValue"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Catalog items keyed by key; a single hero detail object when hero is selected; or the supported-filter object for type=filters. Additional fields follow the source catalog.",
+          "title": "Data"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OutputError"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Failure or quality details. A non-null value alone does not mean the call failed."
+        },
+        "source": {
+          "description": "Source identifier; multiple denotes comparison groups.",
+          "title": "Source",
+          "type": "string"
+        },
+        "source_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Source URL or local: reference; null if unknown.",
+          "title": "Source Url"
+        },
+        "retrieved_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Original retrieval time, not a new observation date.",
+          "title": "Retrieved At"
+        },
+        "source_updated_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Source-reported update time, if known.",
+          "title": "Source Updated At"
+        },
+        "data_period": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Period actually covered by the data, if known.",
+          "title": "Data Period"
+        },
+        "data_patch": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Associated game patch, if known.",
+          "title": "Data Patch"
+        },
+        "requested_filters": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "description": "Original arguments supplied by the caller.",
+          "title": "Requested Filters",
+          "type": "object"
+        },
+        "applied_filters": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "description": "Filters and scope actually applied by the source.",
+          "title": "Applied Filters",
+          "type": "object"
+        },
+        "warnings": {
+          "description": "Limitations, fallback disclosures and evidence cautions.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        },
+        "cached": {
+          "description": "Whether the result was served from stored observations or cache.",
+          "title": "Cached",
+          "type": "boolean"
+        },
+        "stale": {
+          "description": "Whether any included data exceeded its freshness interval.",
+          "title": "Stale",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "status",
+        "data",
+        "error",
+        "source",
+        "source_url",
+        "retrieved_at",
+        "source_updated_at",
+        "data_period",
+        "data_patch",
+        "requested_filters",
+        "applied_filters",
+        "warnings",
+        "cached",
+        "stale"
+      ],
+      "title": "CatalogResponse",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
     }
   },
   "ow_meta": {
@@ -232,6 +445,500 @@
       },
       "title": "MetaRequest",
       "type": "object"
+    },
+    "outputSchema": {
+      "$defs": {
+        "HeroRates": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "properties": {
+            "hero": {
+              "title": "Hero",
+              "type": "string"
+            },
+            "pickrate": {
+              "anyOf": [
+                {
+                  "description": "Percentage, not a 0–1 ratio.",
+                  "maximum": 100,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pickrate"
+            },
+            "winrate": {
+              "anyOf": [
+                {
+                  "description": "Percentage, not a 0–1 ratio.",
+                  "maximum": 100,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Winrate"
+            },
+            "banrate": {
+              "anyOf": [
+                {
+                  "description": "Percentage, not a 0–1 ratio.",
+                  "maximum": 100,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Banrate"
+            },
+            "rate_unit": {
+              "const": "percent",
+              "title": "Rate Unit",
+              "type": "string"
+            },
+            "source_region": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Source grouping; ASIA is not KR.",
+              "title": "Source Region"
+            },
+            "match_server_region": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Actual match server, if evidenced.",
+              "title": "Match Server Region"
+            },
+            "difference": {
+              "anyOf": [
+                {
+                  "additionalProperties": {
+                    "$ref": "#/$defs/JsonValue"
+                  },
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Percentage-point differences, if comparable.",
+              "title": "Difference"
+            }
+          },
+          "required": [
+            "hero",
+            "pickrate",
+            "winrate",
+            "banrate",
+            "rate_unit"
+          ],
+          "title": "HeroRates",
+          "type": "object"
+        },
+        "JsonValue": {},
+        "MetaGroup": {
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "description": "ok: success; empty: no matches; stale: old data; partial: some groups failed; error: the operation failed. Only error sets MCP isError=true.",
+              "enum": [
+                "ok",
+                "empty",
+                "stale",
+                "partial",
+                "error"
+              ],
+              "title": "Status",
+              "type": "string"
+            },
+            "data": {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/$defs/HeroRates"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Tool-specific result; null when unavailable.",
+              "title": "Data"
+            },
+            "error": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/OutputError"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Failure or quality details. A non-null value alone does not mean the call failed."
+            },
+            "source": {
+              "description": "Source identifier; multiple denotes comparison groups.",
+              "title": "Source",
+              "type": "string"
+            },
+            "source_url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Source URL or local: reference; null if unknown.",
+              "title": "Source Url"
+            },
+            "retrieved_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Original retrieval time, not a new observation date.",
+              "title": "Retrieved At"
+            },
+            "source_updated_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Source-reported update time, if known.",
+              "title": "Source Updated At"
+            },
+            "data_period": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Period actually covered by the data, if known.",
+              "title": "Data Period"
+            },
+            "data_patch": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Associated game patch, if known.",
+              "title": "Data Patch"
+            },
+            "requested_filters": {
+              "additionalProperties": {
+                "$ref": "#/$defs/JsonValue"
+              },
+              "description": "Original arguments supplied by the caller.",
+              "title": "Requested Filters",
+              "type": "object"
+            },
+            "applied_filters": {
+              "additionalProperties": {
+                "$ref": "#/$defs/JsonValue"
+              },
+              "description": "Filters and scope actually applied by the source.",
+              "title": "Applied Filters",
+              "type": "object"
+            },
+            "warnings": {
+              "description": "Limitations, fallback disclosures and evidence cautions.",
+              "items": {
+                "type": "string"
+              },
+              "title": "Warnings",
+              "type": "array"
+            },
+            "cached": {
+              "description": "Whether the result was served from stored observations or cache.",
+              "title": "Cached",
+              "type": "boolean"
+            },
+            "stale": {
+              "description": "Whether any included data exceeded its freshness interval.",
+              "title": "Stale",
+              "type": "boolean"
+            },
+            "value": {
+              "description": "Compared map, tier or region. This group carries its own provenance and error.",
+              "title": "Value",
+              "type": "string"
+            }
+          },
+          "required": [
+            "status",
+            "data",
+            "error",
+            "source",
+            "source_url",
+            "retrieved_at",
+            "source_updated_at",
+            "data_period",
+            "data_patch",
+            "requested_filters",
+            "applied_filters",
+            "warnings",
+            "cached",
+            "stale",
+            "value"
+          ],
+          "title": "MetaGroup",
+          "type": "object"
+        },
+        "OutputError": {
+          "additionalProperties": false,
+          "properties": {
+            "code": {
+              "description": "Machine-readable error or result-quality code.",
+              "title": "Code",
+              "type": "string"
+            },
+            "message": {
+              "description": "Explanation of the failure, empty result or data limitation.",
+              "title": "Message",
+              "type": "string"
+            }
+          },
+          "required": [
+            "code",
+            "message"
+          ],
+          "title": "OutputError",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "description": "ok: success; empty: no matches; stale: old data; partial: some groups failed; error: the operation failed. Only error sets MCP isError=true.",
+          "enum": [
+            "ok",
+            "empty",
+            "stale",
+            "partial",
+            "error"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "data": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/HeroRates"
+              },
+              "type": "array"
+            },
+            {
+              "items": {
+                "$ref": "#/$defs/MetaGroup"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Hero rate rows for heroes/history; complete per-value result envelopes for comparisons. History rows retain their retrieval dates.",
+          "title": "Data"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OutputError"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Failure or quality details. A non-null value alone does not mean the call failed."
+        },
+        "source": {
+          "description": "Source identifier; multiple denotes comparison groups.",
+          "title": "Source",
+          "type": "string"
+        },
+        "source_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Source URL or local: reference; null if unknown.",
+          "title": "Source Url"
+        },
+        "retrieved_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Original retrieval time, not a new observation date.",
+          "title": "Retrieved At"
+        },
+        "source_updated_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Source-reported update time, if known.",
+          "title": "Source Updated At"
+        },
+        "data_period": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Period actually covered by the data, if known.",
+          "title": "Data Period"
+        },
+        "data_patch": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Associated game patch, if known.",
+          "title": "Data Patch"
+        },
+        "requested_filters": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "description": "Original arguments supplied by the caller.",
+          "title": "Requested Filters",
+          "type": "object"
+        },
+        "applied_filters": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "description": "Filters and scope actually applied by the source.",
+          "title": "Applied Filters",
+          "type": "object"
+        },
+        "warnings": {
+          "description": "Limitations, fallback disclosures and evidence cautions.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        },
+        "cached": {
+          "description": "Whether the result was served from stored observations or cache.",
+          "title": "Cached",
+          "type": "boolean"
+        },
+        "stale": {
+          "description": "Whether any included data exceeded its freshness interval.",
+          "title": "Stale",
+          "type": "boolean"
+        },
+        "source_status": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "enum": [
+                  "ok",
+                  "empty",
+                  "stale",
+                  "partial",
+                  "error"
+                ],
+                "type": "string"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Comparison value to group status, when comparing groups.",
+          "title": "Source Status"
+        }
+      },
+      "required": [
+        "status",
+        "data",
+        "error",
+        "source",
+        "source_url",
+        "retrieved_at",
+        "source_updated_at",
+        "data_period",
+        "data_patch",
+        "requested_filters",
+        "applied_filters",
+        "warnings",
+        "cached",
+        "stale"
+      ],
+      "title": "MetaResponse",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
     }
   },
   "ow_players_search": {
@@ -265,6 +972,239 @@
       ],
       "title": "PlayersSearchRequest",
       "type": "object"
+    },
+    "outputSchema": {
+      "$defs": {
+        "JsonValue": {},
+        "OutputError": {
+          "additionalProperties": false,
+          "properties": {
+            "code": {
+              "description": "Machine-readable error or result-quality code.",
+              "title": "Code",
+              "type": "string"
+            },
+            "message": {
+              "description": "Explanation of the failure, empty result or data limitation.",
+              "title": "Message",
+              "type": "string"
+            }
+          },
+          "required": [
+            "code",
+            "message"
+          ],
+          "title": "OutputError",
+          "type": "object"
+        },
+        "PlayerSearchRecord": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "properties": {
+            "player_id": {
+              "title": "Player Id",
+              "type": "string"
+            },
+            "name": {
+              "title": "Name",
+              "type": "string"
+            },
+            "battle_tag": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Battle Tag"
+            },
+            "source": {
+              "title": "Source",
+              "type": "string"
+            },
+            "source_url": {
+              "title": "Source Url",
+              "type": "string"
+            }
+          },
+          "required": [
+            "player_id",
+            "name",
+            "battle_tag",
+            "source",
+            "source_url"
+          ],
+          "title": "PlayerSearchRecord",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "description": "ok: success; empty: no matches; stale: old data; partial: some groups failed; error: the operation failed. Only error sets MCP isError=true.",
+          "enum": [
+            "ok",
+            "empty",
+            "stale",
+            "partial",
+            "error"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "data": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/PlayerSearchRecord"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Public search matches. Equal names do not prove identity or nationality.",
+          "title": "Data"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OutputError"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Failure or quality details. A non-null value alone does not mean the call failed."
+        },
+        "source": {
+          "description": "Source identifier; multiple denotes comparison groups.",
+          "title": "Source",
+          "type": "string"
+        },
+        "source_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Source URL or local: reference; null if unknown.",
+          "title": "Source Url"
+        },
+        "retrieved_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Original retrieval time, not a new observation date.",
+          "title": "Retrieved At"
+        },
+        "source_updated_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Source-reported update time, if known.",
+          "title": "Source Updated At"
+        },
+        "data_period": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Period actually covered by the data, if known.",
+          "title": "Data Period"
+        },
+        "data_patch": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Associated game patch, if known.",
+          "title": "Data Patch"
+        },
+        "requested_filters": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "description": "Original arguments supplied by the caller.",
+          "title": "Requested Filters",
+          "type": "object"
+        },
+        "applied_filters": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "description": "Filters and scope actually applied by the source.",
+          "title": "Applied Filters",
+          "type": "object"
+        },
+        "warnings": {
+          "description": "Limitations, fallback disclosures and evidence cautions.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        },
+        "cached": {
+          "description": "Whether the result was served from stored observations or cache.",
+          "title": "Cached",
+          "type": "boolean"
+        },
+        "stale": {
+          "description": "Whether any included data exceeded its freshness interval.",
+          "title": "Stale",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "status",
+        "data",
+        "error",
+        "source",
+        "source_url",
+        "retrieved_at",
+        "source_updated_at",
+        "data_period",
+        "data_patch",
+        "requested_filters",
+        "applied_filters",
+        "warnings",
+        "cached",
+        "stale"
+      ],
+      "title": "PlayerSearchResponse",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
     }
   },
   "ow_player_get": {
@@ -329,6 +1269,268 @@
       ],
       "title": "PlayerGetRequest",
       "type": "object"
+    },
+    "outputSchema": {
+      "$defs": {
+        "JsonValue": {},
+        "OutputError": {
+          "additionalProperties": false,
+          "properties": {
+            "code": {
+              "description": "Machine-readable error or result-quality code.",
+              "title": "Code",
+              "type": "string"
+            },
+            "message": {
+              "description": "Explanation of the failure, empty result or data limitation.",
+              "title": "Message",
+              "type": "string"
+            }
+          },
+          "required": [
+            "code",
+            "message"
+          ],
+          "title": "OutputError",
+          "type": "object"
+        },
+        "PlayerData": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "description": "Summary fields; career, hero and role views retain source-specific statistic keys.",
+          "properties": {
+            "player_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Player Id"
+            },
+            "profile": {
+              "anyOf": [
+                {
+                  "additionalProperties": {
+                    "$ref": "#/$defs/JsonValue"
+                  },
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Profile"
+            },
+            "statistics": {
+              "anyOf": [
+                {
+                  "additionalProperties": {
+                    "$ref": "#/$defs/JsonValue"
+                  },
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Statistics"
+            },
+            "profile_source_url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Profile Source Url"
+            },
+            "statistics_source_url": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Statistics Source Url"
+            }
+          },
+          "title": "PlayerData",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "description": "ok: success; empty: no matches; stale: old data; partial: some groups failed; error: the operation failed. Only error sets MCP isError=true.",
+          "enum": [
+            "ok",
+            "empty",
+            "stale",
+            "partial",
+            "error"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "data": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PlayerData"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "summary: player_id, profile, statistics and their source URLs. career: statistics keyed by hero; hero: selected hero statistics; roles: role-keyed or selected-role statistics. Null denotes unavailable statistics, not proof of privacy."
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OutputError"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Failure or quality details. A non-null value alone does not mean the call failed."
+        },
+        "source": {
+          "description": "Source identifier; multiple denotes comparison groups.",
+          "title": "Source",
+          "type": "string"
+        },
+        "source_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Source URL or local: reference; null if unknown.",
+          "title": "Source Url"
+        },
+        "retrieved_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Original retrieval time, not a new observation date.",
+          "title": "Retrieved At"
+        },
+        "source_updated_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Source-reported update time, if known.",
+          "title": "Source Updated At"
+        },
+        "data_period": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Period actually covered by the data, if known.",
+          "title": "Data Period"
+        },
+        "data_patch": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Associated game patch, if known.",
+          "title": "Data Patch"
+        },
+        "requested_filters": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "description": "Original arguments supplied by the caller.",
+          "title": "Requested Filters",
+          "type": "object"
+        },
+        "applied_filters": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "description": "Filters and scope actually applied by the source.",
+          "title": "Applied Filters",
+          "type": "object"
+        },
+        "warnings": {
+          "description": "Limitations, fallback disclosures and evidence cautions.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        },
+        "cached": {
+          "description": "Whether the result was served from stored observations or cache.",
+          "title": "Cached",
+          "type": "boolean"
+        },
+        "stale": {
+          "description": "Whether any included data exceeded its freshness interval.",
+          "title": "Stale",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "status",
+        "data",
+        "error",
+        "source",
+        "source_url",
+        "retrieved_at",
+        "source_updated_at",
+        "data_period",
+        "data_patch",
+        "requested_filters",
+        "applied_filters",
+        "warnings",
+        "cached",
+        "stale"
+      ],
+      "title": "PlayerResponse",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
     }
   },
   "ow_rankers_search": {
@@ -418,6 +1620,274 @@
       },
       "title": "RankersSearchRequest",
       "type": "object"
+    },
+    "outputSchema": {
+      "$defs": {
+        "JsonValue": {},
+        "OutputError": {
+          "additionalProperties": false,
+          "properties": {
+            "code": {
+              "description": "Machine-readable error or result-quality code.",
+              "title": "Code",
+              "type": "string"
+            },
+            "message": {
+              "description": "Explanation of the failure, empty result or data limitation.",
+              "title": "Message",
+              "type": "string"
+            }
+          },
+          "required": [
+            "code",
+            "message"
+          ],
+          "title": "OutputError",
+          "type": "object"
+        },
+        "RankerRecord": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "properties": {
+            "id": {
+              "title": "Id",
+              "type": "integer"
+            },
+            "display_name": {
+              "title": "Display Name",
+              "type": "string"
+            },
+            "country": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Country"
+            },
+            "identity_confidence": {
+              "enum": [
+                "verified",
+                "source_claim",
+                "inferred",
+                "unknown"
+              ],
+              "title": "Identity Confidence",
+              "type": "string"
+            },
+            "evidence": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/JsonValue"
+                },
+                "type": "object"
+              },
+              "title": "Evidence",
+              "type": "array"
+            },
+            "heroes": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/JsonValue"
+                },
+                "type": "object"
+              },
+              "title": "Heroes",
+              "type": "array"
+            },
+            "leaderboard": {
+              "description": "Dated rank observations with role, region, rank, season, confidence and source.",
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/JsonValue"
+                },
+                "type": "object"
+              },
+              "title": "Leaderboard",
+              "type": "array"
+            }
+          },
+          "required": [
+            "id",
+            "display_name",
+            "country",
+            "identity_confidence",
+            "evidence",
+            "heroes",
+            "leaderboard"
+          ],
+          "title": "RankerRecord",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "description": "ok: success; empty: no matches; stale: old data; partial: some groups failed; error: the operation failed. Only error sets MCP isError=true.",
+          "enum": [
+            "ok",
+            "empty",
+            "stale",
+            "partial",
+            "error"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "data": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/RankerRecord"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Stored evidenced rankers only; not a complete live Top 500 leaderboard.",
+          "title": "Data"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OutputError"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Failure or quality details. A non-null value alone does not mean the call failed."
+        },
+        "source": {
+          "description": "Source identifier; multiple denotes comparison groups.",
+          "title": "Source",
+          "type": "string"
+        },
+        "source_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Source URL or local: reference; null if unknown.",
+          "title": "Source Url"
+        },
+        "retrieved_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Original retrieval time, not a new observation date.",
+          "title": "Retrieved At"
+        },
+        "source_updated_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Source-reported update time, if known.",
+          "title": "Source Updated At"
+        },
+        "data_period": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Period actually covered by the data, if known.",
+          "title": "Data Period"
+        },
+        "data_patch": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Associated game patch, if known.",
+          "title": "Data Patch"
+        },
+        "requested_filters": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "description": "Original arguments supplied by the caller.",
+          "title": "Requested Filters",
+          "type": "object"
+        },
+        "applied_filters": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "description": "Filters and scope actually applied by the source.",
+          "title": "Applied Filters",
+          "type": "object"
+        },
+        "warnings": {
+          "description": "Limitations, fallback disclosures and evidence cautions.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        },
+        "cached": {
+          "description": "Whether the result was served from stored observations or cache.",
+          "title": "Cached",
+          "type": "boolean"
+        },
+        "stale": {
+          "description": "Whether any included data exceeded its freshness interval.",
+          "title": "Stale",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "status",
+        "data",
+        "error",
+        "source",
+        "source_url",
+        "retrieved_at",
+        "source_updated_at",
+        "data_period",
+        "data_patch",
+        "requested_filters",
+        "applied_filters",
+        "warnings",
+        "cached",
+        "stale"
+      ],
+      "title": "RankersResponse",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
     }
   },
   "ow_replays_search": {
@@ -612,6 +2082,296 @@
       },
       "title": "ReplaysSearchRequest",
       "type": "object"
+    },
+    "outputSchema": {
+      "$defs": {
+        "JsonValue": {},
+        "OutputError": {
+          "additionalProperties": false,
+          "properties": {
+            "code": {
+              "description": "Machine-readable error or result-quality code.",
+              "title": "Code",
+              "type": "string"
+            },
+            "message": {
+              "description": "Explanation of the failure, empty result or data limitation.",
+              "title": "Message",
+              "type": "string"
+            }
+          },
+          "required": [
+            "code",
+            "message"
+          ],
+          "title": "OutputError",
+          "type": "object"
+        },
+        "ReplayRecord": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "properties": {
+            "code": {
+              "title": "Code",
+              "type": "string"
+            },
+            "source": {
+              "title": "Source",
+              "type": "string"
+            },
+            "source_url": {
+              "title": "Source Url",
+              "type": "string"
+            },
+            "replay_status": {
+              "enum": [
+                "unverified",
+                "source_reports_expired",
+                "user_reported_working",
+                "client_verified",
+                "needs_recheck"
+              ],
+              "title": "Replay Status",
+              "type": "string"
+            },
+            "heroes": {
+              "description": "Heroes reported by the replay source.",
+              "items": {
+                "type": "string"
+              },
+              "title": "Heroes",
+              "type": "array"
+            },
+            "player_country": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Evidenced player nationality, separate from match server.",
+              "title": "Player Country"
+            },
+            "match_server_region": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Evidenced match server, independent of source or leaderboard region.",
+              "title": "Match Server Region"
+            },
+            "evidence": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/JsonValue"
+                },
+                "type": "object"
+              },
+              "title": "Evidence",
+              "type": "array"
+            },
+            "validation": {
+              "anyOf": [
+                {
+                  "additionalProperties": {
+                    "$ref": "#/$defs/JsonValue"
+                  },
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Operator playback evidence with observed_at, status, source and evidence_ref; not a live client check.",
+              "title": "Validation"
+            }
+          },
+          "required": [
+            "code",
+            "source",
+            "source_url",
+            "replay_status",
+            "heroes",
+            "evidence"
+          ],
+          "title": "ReplayRecord",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "description": "ok: success; empty: no matches; stale: old data; partial: some groups failed; error: the operation failed. Only error sets MCP isError=true.",
+          "enum": [
+            "ok",
+            "empty",
+            "stale",
+            "partial",
+            "error"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "data": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ReplayRecord"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Replay observations with identity, region and playback evidence; public codes are not automatically playable.",
+          "title": "Data"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OutputError"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Failure or quality details. A non-null value alone does not mean the call failed."
+        },
+        "source": {
+          "description": "Source identifier; multiple denotes comparison groups.",
+          "title": "Source",
+          "type": "string"
+        },
+        "source_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Source URL or local: reference; null if unknown.",
+          "title": "Source Url"
+        },
+        "retrieved_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Original retrieval time, not a new observation date.",
+          "title": "Retrieved At"
+        },
+        "source_updated_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Source-reported update time, if known.",
+          "title": "Source Updated At"
+        },
+        "data_period": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Period actually covered by the data, if known.",
+          "title": "Data Period"
+        },
+        "data_patch": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Associated game patch, if known.",
+          "title": "Data Patch"
+        },
+        "requested_filters": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "description": "Original arguments supplied by the caller.",
+          "title": "Requested Filters",
+          "type": "object"
+        },
+        "applied_filters": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "description": "Filters and scope actually applied by the source.",
+          "title": "Applied Filters",
+          "type": "object"
+        },
+        "warnings": {
+          "description": "Limitations, fallback disclosures and evidence cautions.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        },
+        "cached": {
+          "description": "Whether the result was served from stored observations or cache.",
+          "title": "Cached",
+          "type": "boolean"
+        },
+        "stale": {
+          "description": "Whether any included data exceeded its freshness interval.",
+          "title": "Stale",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "status",
+        "data",
+        "error",
+        "source",
+        "source_url",
+        "retrieved_at",
+        "source_updated_at",
+        "data_period",
+        "data_patch",
+        "requested_filters",
+        "applied_filters",
+        "warnings",
+        "cached",
+        "stale"
+      ],
+      "title": "ReplaysResponse",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
     }
   },
   "ow_replay_get": {
@@ -635,6 +2395,292 @@
       ],
       "title": "ReplayGetRequest",
       "type": "object"
+    },
+    "outputSchema": {
+      "$defs": {
+        "JsonValue": {},
+        "OutputError": {
+          "additionalProperties": false,
+          "properties": {
+            "code": {
+              "description": "Machine-readable error or result-quality code.",
+              "title": "Code",
+              "type": "string"
+            },
+            "message": {
+              "description": "Explanation of the failure, empty result or data limitation.",
+              "title": "Message",
+              "type": "string"
+            }
+          },
+          "required": [
+            "code",
+            "message"
+          ],
+          "title": "OutputError",
+          "type": "object"
+        },
+        "ReplayRecord": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "properties": {
+            "code": {
+              "title": "Code",
+              "type": "string"
+            },
+            "source": {
+              "title": "Source",
+              "type": "string"
+            },
+            "source_url": {
+              "title": "Source Url",
+              "type": "string"
+            },
+            "replay_status": {
+              "enum": [
+                "unverified",
+                "source_reports_expired",
+                "user_reported_working",
+                "client_verified",
+                "needs_recheck"
+              ],
+              "title": "Replay Status",
+              "type": "string"
+            },
+            "heroes": {
+              "description": "Heroes reported by the replay source.",
+              "items": {
+                "type": "string"
+              },
+              "title": "Heroes",
+              "type": "array"
+            },
+            "player_country": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Evidenced player nationality, separate from match server.",
+              "title": "Player Country"
+            },
+            "match_server_region": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Evidenced match server, independent of source or leaderboard region.",
+              "title": "Match Server Region"
+            },
+            "evidence": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/JsonValue"
+                },
+                "type": "object"
+              },
+              "title": "Evidence",
+              "type": "array"
+            },
+            "validation": {
+              "anyOf": [
+                {
+                  "additionalProperties": {
+                    "$ref": "#/$defs/JsonValue"
+                  },
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Operator playback evidence with observed_at, status, source and evidence_ref; not a live client check.",
+              "title": "Validation"
+            }
+          },
+          "required": [
+            "code",
+            "source",
+            "source_url",
+            "replay_status",
+            "heroes",
+            "evidence"
+          ],
+          "title": "ReplayRecord",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "description": "ok: success; empty: no matches; stale: old data; partial: some groups failed; error: the operation failed. Only error sets MCP isError=true.",
+          "enum": [
+            "ok",
+            "empty",
+            "stale",
+            "partial",
+            "error"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "data": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReplayRecord"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "One replay observation with evidence and original retrieval dates; null when no record is available."
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OutputError"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Failure or quality details. A non-null value alone does not mean the call failed."
+        },
+        "source": {
+          "description": "Source identifier; multiple denotes comparison groups.",
+          "title": "Source",
+          "type": "string"
+        },
+        "source_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Source URL or local: reference; null if unknown.",
+          "title": "Source Url"
+        },
+        "retrieved_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Original retrieval time, not a new observation date.",
+          "title": "Retrieved At"
+        },
+        "source_updated_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Source-reported update time, if known.",
+          "title": "Source Updated At"
+        },
+        "data_period": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Period actually covered by the data, if known.",
+          "title": "Data Period"
+        },
+        "data_patch": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Associated game patch, if known.",
+          "title": "Data Patch"
+        },
+        "requested_filters": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "description": "Original arguments supplied by the caller.",
+          "title": "Requested Filters",
+          "type": "object"
+        },
+        "applied_filters": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "description": "Filters and scope actually applied by the source.",
+          "title": "Applied Filters",
+          "type": "object"
+        },
+        "warnings": {
+          "description": "Limitations, fallback disclosures and evidence cautions.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        },
+        "cached": {
+          "description": "Whether the result was served from stored observations or cache.",
+          "title": "Cached",
+          "type": "boolean"
+        },
+        "stale": {
+          "description": "Whether any included data exceeded its freshness interval.",
+          "title": "Stale",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "status",
+        "data",
+        "error",
+        "source",
+        "source_url",
+        "retrieved_at",
+        "source_updated_at",
+        "data_period",
+        "data_patch",
+        "requested_filters",
+        "applied_filters",
+        "warnings",
+        "cached",
+        "stale"
+      ],
+      "title": "ReplayResponse",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
     }
   },
   "ow_patches": {
@@ -704,6 +2750,274 @@
       },
       "title": "PatchesRequest",
       "type": "object"
+    },
+    "outputSchema": {
+      "$defs": {
+        "JsonValue": {},
+        "OutputError": {
+          "additionalProperties": false,
+          "properties": {
+            "code": {
+              "description": "Machine-readable error or result-quality code.",
+              "title": "Code",
+              "type": "string"
+            },
+            "message": {
+              "description": "Explanation of the failure, empty result or data limitation.",
+              "title": "Message",
+              "type": "string"
+            }
+          },
+          "required": [
+            "code",
+            "message"
+          ],
+          "title": "OutputError",
+          "type": "object"
+        },
+        "PatchRecord": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "properties": {
+            "patch_date": {
+              "title": "Patch Date",
+              "type": "string"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            },
+            "description": {
+              "title": "Description",
+              "type": "string"
+            },
+            "hero_changes": {
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/JsonValue"
+                },
+                "type": "object"
+              },
+              "title": "Hero Changes",
+              "type": "array"
+            },
+            "replay_compatibility": {
+              "$ref": "#/$defs/ReplayCompatibility"
+            },
+            "source": {
+              "title": "Source",
+              "type": "string"
+            },
+            "source_url": {
+              "title": "Source Url",
+              "type": "string"
+            }
+          },
+          "required": [
+            "patch_date",
+            "title",
+            "description",
+            "hero_changes",
+            "replay_compatibility",
+            "source",
+            "source_url"
+          ],
+          "title": "PatchRecord",
+          "type": "object"
+        },
+        "ReplayCompatibility": {
+          "additionalProperties": false,
+          "properties": {
+            "effect": {
+              "enum": [
+                "invalidated",
+                "preserved",
+                "unknown"
+              ],
+              "title": "Effect",
+              "type": "string"
+            },
+            "notices": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Notices",
+              "type": "array"
+            }
+          },
+          "required": [
+            "effect",
+            "notices"
+          ],
+          "title": "ReplayCompatibility",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "description": "ok: success; empty: no matches; stale: old data; partial: some groups failed; error: the operation failed. Only error sets MCP isError=true.",
+          "enum": [
+            "ok",
+            "empty",
+            "stale",
+            "partial",
+            "error"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "data": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/PatchRecord"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Official patch notes and hero changes, newest first, including explicit replay compatibility notices.",
+          "title": "Data"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OutputError"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Failure or quality details. A non-null value alone does not mean the call failed."
+        },
+        "source": {
+          "description": "Source identifier; multiple denotes comparison groups.",
+          "title": "Source",
+          "type": "string"
+        },
+        "source_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Source URL or local: reference; null if unknown.",
+          "title": "Source Url"
+        },
+        "retrieved_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Original retrieval time, not a new observation date.",
+          "title": "Retrieved At"
+        },
+        "source_updated_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Source-reported update time, if known.",
+          "title": "Source Updated At"
+        },
+        "data_period": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Period actually covered by the data, if known.",
+          "title": "Data Period"
+        },
+        "data_patch": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Associated game patch, if known.",
+          "title": "Data Patch"
+        },
+        "requested_filters": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "description": "Original arguments supplied by the caller.",
+          "title": "Requested Filters",
+          "type": "object"
+        },
+        "applied_filters": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "description": "Filters and scope actually applied by the source.",
+          "title": "Applied Filters",
+          "type": "object"
+        },
+        "warnings": {
+          "description": "Limitations, fallback disclosures and evidence cautions.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        },
+        "cached": {
+          "description": "Whether the result was served from stored observations or cache.",
+          "title": "Cached",
+          "type": "boolean"
+        },
+        "stale": {
+          "description": "Whether any included data exceeded its freshness interval.",
+          "title": "Stale",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "status",
+        "data",
+        "error",
+        "source",
+        "source_url",
+        "retrieved_at",
+        "source_updated_at",
+        "data_period",
+        "data_patch",
+        "requested_filters",
+        "applied_filters",
+        "warnings",
+        "cached",
+        "stale"
+      ],
+      "title": "PatchesResponse",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
     }
   },
   "ow_esports": {
@@ -813,6 +3127,285 @@
       },
       "title": "EsportsRequest",
       "type": "object"
+    },
+    "outputSchema": {
+      "$defs": {
+        "EsportsData": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "properties": {
+            "dataset_type": {
+              "const": "esports",
+              "title": "Dataset Type",
+              "type": "string"
+            },
+            "release_tag": {
+              "title": "Release Tag",
+              "type": "string"
+            },
+            "published_at": {
+              "title": "Published At",
+              "type": "string"
+            },
+            "data_until": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Data Until"
+            },
+            "coverage_period": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Coverage Period"
+            },
+            "view": {
+              "enum": [
+                "hero_meta",
+                "matches",
+                "maps",
+                "bans",
+                "teams"
+              ],
+              "title": "View",
+              "type": "string"
+            },
+            "total": {
+              "minimum": 0,
+              "title": "Total",
+              "type": "integer"
+            },
+            "offset": {
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            },
+            "limit": {
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            },
+            "records": {
+              "description": "Rows selected by view: hero metrics, matches, maps, bans or teams. Metric origins/units are carried by each row; these are esports statistics, not ranked win rates.",
+              "items": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/JsonValue"
+                },
+                "type": "object"
+              },
+              "title": "Records",
+              "type": "array"
+            }
+          },
+          "required": [
+            "dataset_type",
+            "release_tag",
+            "published_at",
+            "data_until",
+            "coverage_period",
+            "view",
+            "total",
+            "offset",
+            "limit",
+            "records"
+          ],
+          "title": "EsportsData",
+          "type": "object"
+        },
+        "JsonValue": {},
+        "OutputError": {
+          "additionalProperties": false,
+          "properties": {
+            "code": {
+              "description": "Machine-readable error or result-quality code.",
+              "title": "Code",
+              "type": "string"
+            },
+            "message": {
+              "description": "Explanation of the failure, empty result or data limitation.",
+              "title": "Message",
+              "type": "string"
+            }
+          },
+          "required": [
+            "code",
+            "message"
+          ],
+          "title": "OutputError",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "description": "ok: success; empty: no matches; stale: old data; partial: some groups failed; error: the operation failed. Only error sets MCP isError=true.",
+          "enum": [
+            "ok",
+            "empty",
+            "stale",
+            "partial",
+            "error"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "data": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EsportsData"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Paginated OWCS Korea release data, with publication date and actual coverage period kept separate."
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OutputError"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Failure or quality details. A non-null value alone does not mean the call failed."
+        },
+        "source": {
+          "description": "Source identifier; multiple denotes comparison groups.",
+          "title": "Source",
+          "type": "string"
+        },
+        "source_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Source URL or local: reference; null if unknown.",
+          "title": "Source Url"
+        },
+        "retrieved_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Original retrieval time, not a new observation date.",
+          "title": "Retrieved At"
+        },
+        "source_updated_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Source-reported update time, if known.",
+          "title": "Source Updated At"
+        },
+        "data_period": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Period actually covered by the data, if known.",
+          "title": "Data Period"
+        },
+        "data_patch": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Associated game patch, if known.",
+          "title": "Data Patch"
+        },
+        "requested_filters": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "description": "Original arguments supplied by the caller.",
+          "title": "Requested Filters",
+          "type": "object"
+        },
+        "applied_filters": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "description": "Filters and scope actually applied by the source.",
+          "title": "Applied Filters",
+          "type": "object"
+        },
+        "warnings": {
+          "description": "Limitations, fallback disclosures and evidence cautions.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        },
+        "cached": {
+          "description": "Whether the result was served from stored observations or cache.",
+          "title": "Cached",
+          "type": "boolean"
+        },
+        "stale": {
+          "description": "Whether any included data exceeded its freshness interval.",
+          "title": "Stale",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "status",
+        "data",
+        "error",
+        "source",
+        "source_url",
+        "retrieved_at",
+        "source_updated_at",
+        "data_period",
+        "data_patch",
+        "requested_filters",
+        "applied_filters",
+        "warnings",
+        "cached",
+        "stale"
+      ],
+      "title": "EsportsResponse",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
     }
   },
   "ow_status": {
@@ -828,6 +3421,280 @@
       },
       "title": "StatusRequest",
       "type": "object"
+    },
+    "outputSchema": {
+      "$defs": {
+        "JsonValue": {},
+        "OutputError": {
+          "additionalProperties": false,
+          "properties": {
+            "code": {
+              "description": "Machine-readable error or result-quality code.",
+              "title": "Code",
+              "type": "string"
+            },
+            "message": {
+              "description": "Explanation of the failure, empty result or data limitation.",
+              "title": "Message",
+              "type": "string"
+            }
+          },
+          "required": [
+            "code",
+            "message"
+          ],
+          "title": "OutputError",
+          "type": "object"
+        },
+        "SourceHealth": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "properties": {
+            "status": {
+              "title": "Status",
+              "type": "string"
+            },
+            "last_success": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Last Success"
+            },
+            "last_error": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Last Error"
+            },
+            "capabilities": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Capabilities",
+              "type": "array"
+            }
+          },
+          "required": [
+            "status",
+            "last_success",
+            "last_error",
+            "capabilities"
+          ],
+          "title": "SourceHealth",
+          "type": "object"
+        },
+        "StatusData": {
+          "additionalProperties": false,
+          "properties": {
+            "sources": {
+              "additionalProperties": {
+                "$ref": "#/$defs/SourceHealth"
+              },
+              "title": "Sources",
+              "type": "object"
+            },
+            "stored_counts": {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "title": "Stored Counts",
+              "type": "object"
+            },
+            "registry_scope": {
+              "title": "Registry Scope",
+              "type": "string"
+            },
+            "live_spectating": {
+              "title": "Live Spectating",
+              "type": "string"
+            },
+            "client_verification": {
+              "title": "Client Verification",
+              "type": "string"
+            }
+          },
+          "required": [
+            "sources",
+            "stored_counts",
+            "registry_scope",
+            "live_spectating",
+            "client_verification"
+          ],
+          "title": "StatusData",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "description": "ok: success; empty: no matches; stale: old data; partial: some groups failed; error: the operation failed. Only error sets MCP isError=true.",
+          "enum": [
+            "ok",
+            "empty",
+            "stale",
+            "partial",
+            "error"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "data": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StatusData"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Observed source health, capabilities and local record counts. Unknown health is not evidence of an outage."
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OutputError"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Failure or quality details. A non-null value alone does not mean the call failed."
+        },
+        "source": {
+          "description": "Source identifier; multiple denotes comparison groups.",
+          "title": "Source",
+          "type": "string"
+        },
+        "source_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Source URL or local: reference; null if unknown.",
+          "title": "Source Url"
+        },
+        "retrieved_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Original retrieval time, not a new observation date.",
+          "title": "Retrieved At"
+        },
+        "source_updated_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Source-reported update time, if known.",
+          "title": "Source Updated At"
+        },
+        "data_period": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Period actually covered by the data, if known.",
+          "title": "Data Period"
+        },
+        "data_patch": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Associated game patch, if known.",
+          "title": "Data Patch"
+        },
+        "requested_filters": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "description": "Original arguments supplied by the caller.",
+          "title": "Requested Filters",
+          "type": "object"
+        },
+        "applied_filters": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "description": "Filters and scope actually applied by the source.",
+          "title": "Applied Filters",
+          "type": "object"
+        },
+        "warnings": {
+          "description": "Limitations, fallback disclosures and evidence cautions.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        },
+        "cached": {
+          "description": "Whether the result was served from stored observations or cache.",
+          "title": "Cached",
+          "type": "boolean"
+        },
+        "stale": {
+          "description": "Whether any included data exceeded its freshness interval.",
+          "title": "Stale",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "status",
+        "data",
+        "error",
+        "source",
+        "source_url",
+        "retrieved_at",
+        "source_updated_at",
+        "data_period",
+        "data_patch",
+        "requested_filters",
+        "applied_filters",
+        "warnings",
+        "cached",
+        "stale"
+      ],
+      "title": "StatusResponse",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
     }
   }
 }

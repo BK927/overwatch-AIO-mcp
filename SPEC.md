@@ -4,7 +4,7 @@
 
 원본 설계의 Phase 1–3을 하나의 Python 패키지로 구현한다. MCP에는 조회 도구 10개만 노출한다. 근거 등록, 실제 재생 확인 기록, 수집 스케줄 관리는 로컬 CLI로 분리한다. 공개 출처에 없는 정보는 추정하지 않는다.
 
-정확한 도구 입력 JSON Schema는 `docs/tool-schemas.json`, SQLite DDL은 `src/overwatch_mcp/db/schema.sql`, 랭커 입력 형식은 `Registry`의 Pydantic 모델 및 `docs/curation.md`를 따른다. 도구 스키마는 `uv run overwatch-aio-mcp schema --output docs/tool-schemas.json`으로 재생성한다.
+정확한 도구 입력·출력 JSON Schema와 annotations는 `docs/tool-schemas.json`, SQLite DDL은 `src/overwatch_mcp/db/schema.sql`, 랭커 입력 형식은 `Registry`의 Pydantic 모델 및 `docs/curation.md`를 따른다. 도구 스키마는 `uv run overwatch-aio-mcp schema --output docs/tool-schemas.json`으로 실제 `tools/list` 정의에서 재생성한다.
 
 모든 도구는 `status`, `data`, `error`, `source`, `source_url`, `retrieved_at`, `source_updated_at`, `data_period`, `data_patch`, `requested_filters`, `applied_filters`, `warnings`, `cached`, `stale`를 반환한다. `requested_filters`는 입력 조건, `applied_filters`는 실제 적용 범위이다. 여러 소스 또는 페이지를 사용한 결과는 개별 행/그룹의 출처와 관측 시점도 확인해야 한다.
 
@@ -14,6 +14,8 @@
 - `EMPTY_RESULT`는 정상 조회의 결과 없음이다. API 장애나 파싱 실패를 빈 배열로 숨기지 않는다.
 - `PRIVATE_PROFILE`, `UNSUPPORTED_FILTER`, `SOURCE_UNAVAILABLE`, `PARSE_ERROR`, `RATE_LIMITED`, `STALE_DATA`, `PARTIAL_RESULT`, 입력 오류 `INVALID_ARGUMENT`를 구분한다.
 - 지역 비교 일부 실패는 개별 오류와 성공 그룹을 함께 반환한다. 다른 출처 간 수치 차이는 자동 계산하지 않는다.
+- 모든 도구는 `responses.py`의 공통 필수 필드·도구별 데이터 구조를 `outputSchema`로 광고하고, 반환 전에 검증한다. 출처별 확장 필드와 기존 값·필드 생략 여부는 보존한다. `structuredContent`와 JSON 텍스트에는 동일한 본문을 담는다.
+- `status=error`일 때만 MCP `isError=true`다. `empty`, `stale`, `partial`은 데이터 품질 상태로 유지하며 호출 실패로 바꾸지 않는다. 비교 전체 실패는 그룹별 오류를 보존한 채 `isError=true`로 반환한다. 내부 출력 계약 위반은 구조화된 `INTERNAL_ERROR`로 반환한다.
 
 ## 도구
 

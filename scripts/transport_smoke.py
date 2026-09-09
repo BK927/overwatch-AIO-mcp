@@ -9,7 +9,34 @@ import sys
 import tempfile
 from pathlib import Path
 
+from jsonschema import Draft202012Validator
 from mcp import Client, StdioServerParameters
+
+
+async def check_contract(client):
+    tools = (await client.list_tools()).tools
+    assert len(tools) == 10
+    schemas = {tool.name: tool.output_schema for tool in tools}
+    for tool in tools:
+        Draft202012Validator.check_schema(tool.output_schema)
+        assert {"status", "data", "error", "source", "warnings"} <= set(
+            tool.output_schema["required"]
+        )
+        assert tool.annotations.read_only_hint is True
+        assert tool.annotations.destructive_hint is False
+    for name, arguments, status, code in [
+        ("ow_status", {}, "ok", None),
+        ("ow_rankers_search", {"country": "KR"}, "empty", "EMPTY_RESULT"),
+        ("ow_catalog", {"locale": "invalid"}, "error", "UNSUPPORTED_FILTER"),
+        ("ow_meta", {"matchup": "ramattra"}, "error", "INVALID_ARGUMENT"),
+    ]:
+        result = await client.call_tool(name, arguments)
+        body = result.structured_content
+        Draft202012Validator(schemas[name]).validate(body)
+        assert body["status"] == status
+        assert result.is_error is (status == "error")
+        assert (body["error"]["code"] if body["error"] else None) == code
+        assert json.loads(result.content[0].text) == body
 
 
 async def main():
@@ -21,10 +48,11 @@ async def main():
                 command=sys.executable, args=["-m", "overwatch_mcp.server", "--db", db, "serve"]
             )
         ) as client:
-            tools = await client.list_tools()
-            result = await client.call_tool("ow_status", {})
-            assert len(tools.tools) == 10 and result.structured_content["status"] == "ok"
-            print("stdio: handshake, 10 tools, structured call passed", flush=True)
+            await check_contract(client)
+            print(
+                "stdio: 10 output schemas, annotations, success/empty/error calls passed",
+                flush=True,
+            )
         with socket.socket() as listener:
             listener.bind(("127.0.0.1", 0))
             port = listener.getsockname()[1]
@@ -63,11 +91,11 @@ async def main():
                 if not ready:
                     raise RuntimeError("HTTP server did not start within ten seconds")
                 async with Client(f"http://127.0.0.1:{port}/mcp") as client:
-                    tools = await client.list_tools()
-                    result = await client.call_tool("ow_rankers_search", {"country": "KR"})
-                    assert len(tools.tools) == 10
-                    assert result.structured_content["error"]["code"] == "EMPTY_RESULT"
-                print("streamable-http: handshake, 10 tools, structured call passed", flush=True)
+                    await check_contract(client)
+                print(
+                    "streamable-http: 10 output schemas, annotations, success/empty/error calls passed",
+                    flush=True,
+                )
             finally:
                 # Windows venv launchers may spawn an interpreter child; terminate our own tree.
                 if os.name == "nt" and process.poll() is None:

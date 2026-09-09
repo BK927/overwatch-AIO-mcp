@@ -8,7 +8,7 @@ import os
 from contextlib import asynccontextmanager
 from contextvars import ContextVar
 from pathlib import Path
-from typing import Any
+from typing import Annotated
 
 from mcp.server import MCPServer
 from mcp.types import CallToolResult, TextContent, ToolAnnotations
@@ -19,6 +19,7 @@ from . import __version__
 from .db import Repository
 from .models import SourceError, error_envelope
 from .requests import REQUESTS
+from .responses import RESPONSES
 from .service import Service
 
 DESCRIPTIONS = {
@@ -37,6 +38,16 @@ DESCRIPTIONS = {
 RAW_ARGUMENTS: ContextVar[dict | None] = ContextVar("overwatch_raw_arguments", default=None)
 
 
+def tool_result(name: str, result: dict) -> CallToolResult:
+    # Validate without reserializing the model: preserve omitted fields and source values.
+    RESPONSES[name].model_validate(result)
+    return CallToolResult(
+        is_error=result["status"] == "error",
+        structured_content=result,
+        content=[TextContent(type="text", text=json.dumps(result, ensure_ascii=False))],
+    )
+
+
 async def validate_arguments(ctx, call_next):
     if ctx.method != "tools/call" or not isinstance(ctx.params, dict):
         return await call_next(ctx)
@@ -49,11 +60,7 @@ async def validate_arguments(ctx, call_next):
     except ValidationError as exc:
         message = "; ".join(f"{'.'.join(map(str, e['loc']))}: {e['msg']}" for e in exc.errors())
         result = error_envelope(SourceError("INVALID_ARGUMENT", message, "server"), arguments)
-        return CallToolResult(
-            is_error=True,
-            structured_content=result,
-            content=[TextContent(type="text", text=json.dumps(result, ensure_ascii=False))],
-        )
+        return tool_result(name, result)
     token = RAW_ARGUMENTS.set(arguments)
     try:
         return await call_next(ctx)
@@ -98,11 +105,25 @@ def create_server(service: Service | None = None, db_path: str | None = None) ->
             if active is None:
                 raise RuntimeError("Server lifespan has not started")
             raw = RAW_ARGUMENTS.get()
-            return await active.call(name, raw if raw is not None else kwargs)
+            arguments = raw if raw is not None else kwargs
+            result = await active.call(name, arguments)
+            try:
+                return tool_result(name, result)
+            except ValidationError:
+                return tool_result(
+                    name,
+                    error_envelope(
+                        SourceError(
+                            "INTERNAL_ERROR", "Tool returned an invalid response.", "server"
+                        ),
+                        arguments,
+                    ),
+                )
 
         # Derive the flat public signature from the same validated model used by dispatch.
         parameters = []
-        annotations = {"return": dict[str, Any]}
+        return_type = Annotated[CallToolResult, RESPONSES[name]]
+        annotations = {"return": return_type}
         for field_name, field in model.model_fields.items():
             annotation = field.rebuild_annotation()
             default = (
@@ -120,7 +141,7 @@ def create_server(service: Service | None = None, db_path: str | None = None) ->
         invoke.__name__ = name
         invoke.__doc__ = DESCRIPTIONS[name]
         invoke.__annotations__ = annotations
-        invoke.__signature__ = inspect.Signature(parameters, return_annotation=dict[str, Any])
+        invoke.__signature__ = inspect.Signature(parameters, return_annotation=return_type)
         server.tool(
             name=name,
             description=DESCRIPTIONS[name],
@@ -147,7 +168,7 @@ def main():
     serve.add_argument("--transport", choices=["stdio", "streamable-http"], default="stdio")
     serve.add_argument("--host", default="127.0.0.1")
     serve.add_argument("--port", type=int, default=8765)
-    schema = sub.add_parser("schema", help="Export tool argument JSON Schemas")
+    schema = sub.add_parser("schema", help="Export tool input/output JSON Schemas and annotations")
     schema.add_argument("--output")
     importer = sub.add_parser(
         "import-rankers", help="Import local curator-authored ranker evidence JSON"
@@ -185,8 +206,10 @@ def main():
     if args.command == "schema":
         text = json.dumps(
             {
-                name: {"description": DESCRIPTIONS[name], "inputSchema": model.model_json_schema()}
-                for name, model in REQUESTS.items()
+                tool.name: tool.model_dump(
+                    mode="json", by_alias=True, exclude_none=True, exclude={"name"}
+                )
+                for tool in asyncio.run(create_server().list_tools())
             },
             ensure_ascii=False,
             indent=2,
