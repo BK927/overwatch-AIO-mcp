@@ -1,4 +1,4 @@
-name: Tests
+name: Tests and release
 on: [push, pull_request]
 permissions:
   contents: read
@@ -7,7 +7,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
         python: ["3.11", "3.13"]
         interface: [skill, mcp]
         include:
@@ -30,3 +30,73 @@ jobs:
       - run: uv run --frozen --extra dev ${{ matrix.extras }} python scripts/validate_skill.py
       - run: uv run --frozen --extra dev ${{ matrix.extras }} pytest -q
       - run: uv build
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: tests
+    runs-on: ubuntu-latest
+    concurrency:
+      group: release-${{ github.ref }}
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.12.9"
+          python-version: "3.13"
+      - name: Verify annotated tag, main ancestry, and project version
+        shell: bash
+        run: |
+          test "$(git cat-file -t "refs/tags/$GITHUB_REF_NAME")" = "tag"
+          TAG_COMMIT="$(git rev-list -n 1 "refs/tags/$GITHUB_REF_NAME")"
+          test "$(git rev-parse HEAD)" = "$TAG_COMMIT"
+          git merge-base --is-ancestor "$TAG_COMMIT" refs/remotes/origin/main
+          VERSION="$(uv run --no-project python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
+          test "$GITHUB_REF_NAME" = "v$VERSION"
+      - name: Test distribution
+        run: |
+          uv sync --locked --extra dev --extra mcp
+          uv run --frozen --extra dev --extra mcp pytest tests/test_distribution.py -q
+      - name: Build release assets
+        run: |
+          uv build --out-dir dist
+          uv run --frozen --no-dev python scripts/build_mcpb.py
+          cmp server.json dist/server.json
+      - name: Install official MCP publisher
+        shell: bash
+        run: |
+          curl --fail --location --silent --show-error \
+            https://github.com/modelcontextprotocol/registry/releases/download/v1.7.9/mcp-publisher_linux_amd64.tar.gz \
+            --output mcp-publisher.tar.gz
+          echo "ab128162b0616090b47cf245afe0a23f3ef08936fdce19074f5ba0a4469281ac  mcp-publisher.tar.gz" | sha256sum --check -
+          tar --extract --gzip --file mcp-publisher.tar.gz mcp-publisher
+          ./mcp-publisher validate server.json
+      - name: Create or verify GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          if ! gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release create "$GITHUB_REF_NAME" \
+              dist/overwatch-aio-*.mcpb \
+              dist/server.json \
+              dist/*.whl \
+              dist/*.tar.gz \
+              --verify-tag \
+              --title "Overwatch 2 Data MCP Server $GITHUB_REF_NAME" \
+              --generate-notes
+          fi
+          mkdir published-assets
+          gh release download "$GITHUB_REF_NAME" --dir published-assets
+          for file in dist/*; do
+            cmp "$file" "published-assets/$(basename "$file")"
+          done
+      - name: Publish to the official MCP Registry
+        run: |
+          ./mcp-publisher login github-oidc
+          ./mcp-publisher publish server.json

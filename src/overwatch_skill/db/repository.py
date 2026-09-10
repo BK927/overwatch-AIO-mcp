@@ -83,7 +83,6 @@ class Repository:
                 (key, source, url, body, dumps(headers), retrieved_at, now + ttl, now),
             )
             db.execute("DELETE FROM http_cache WHERE created_epoch < ?", (now - 7 * 86400,))
-            # Bound total retained raw response bytes for a 2 GB Raspberry Pi.
             rows = db.execute(
                 "SELECT cache_key,length(body) AS size FROM http_cache ORDER BY created_epoch DESC"
             ).fetchall()

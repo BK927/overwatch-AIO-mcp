@@ -1,9 +1,9 @@
 ---
 name: overwatch-aio-skill
-description: Query and interpret Overwatch hero meta, public player stats, evidenced rankers and replays, patch notes, and OWCS Korea data. Use for Overwatch data questions or explicit evidence-management requests. 오버워치 메타·플레이어 통계·랭커·리플레이·패치·대회 자료 조회와 근거 등록 요청에 사용한다.
+description: Query and interpret Overwatch 2 hero meta, public player stats, evidenced rankers and replays, patch notes, and OWCS Korea data. Use for Overwatch 2 data questions or explicit evidence-management requests. 오버워치 2 메타·플레이어 통계·랭커·리플레이·패치·대회 자료 조회와 근거 등록 요청에 사용한다.
 ---
 
-# Overwatch AIO Skill
+# Overwatch 2 Data Agent Skill
 
 질문에 필요한 조회를 선택하고 출처·실제 적용 조건·관측 날짜를 근거로 답한다. 요청할 때만 실행하는 Python 패키지가 이 스킬에 포함되어 있다.
 

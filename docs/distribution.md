@@ -16,7 +16,7 @@ The [skills.sh FAQ](https://www.skills.sh/docs/faq) describes automatic listing 
 
 The release bundle uses the [MCPB UV runtime](https://github.com/anthropics/mcpb/blob/main/MANIFEST.md). A compatible host must support manifest version 0.4 and UV server configuration. Source-based stdio/HTTP installation remains available for other clients.
 
-The manifest declares the exact `uv` command, the `mcp` extra, and ten tools. It installs the runtime package with `--no-editable` so Python 3.11 does not rely on a locale-decoded source-path file for non-ASCII installation directories. It uses the same DB selection and server entrypoint as the source install. Dependencies are prepared on first launch; the bundle does not include a virtual environment or user's data. Windows and Linux are covered by CI.
+The manifest declares the exact `uv` command, the `mcp` extra, and ten tools. It installs the runtime package with `--no-editable` so Python 3.11 does not rely on a locale-decoded source-path file for non-ASCII installation directories. It uses the same DB selection and server entrypoint as the source install. Dependencies are prepared on first launch; the bundle does not include a virtual environment or user's data. Linux, macOS, and Windows are covered by CI.
 
 Build from the intended release checkout:
 
@@ -26,7 +26,7 @@ uv run --frozen --no-dev python scripts/build_mcpb.py
 
 This creates `dist/overwatch-aio-<version>.mcpb` and `dist/server.json`. The builder includes only selected source and documentation files and computes the registry's SHA-256 from the actual bundle. Development tests and build helpers remain in the GitHub checkout rather than the runtime bundle.
 
-Run `uv run --frozen --extra dev --extra mcp pytest tests/test_distribution.py -q` to check packaging and launch the extracted bundle's declared command. The release additionally uses the official MCPB CLI to validate the manifest.
+Run `uv run --frozen --extra dev --extra mcp pytest tests/test_distribution.py -q` to check packaging and launch the extracted bundle's declared command. The release additionally uses the official `mcp-publisher` to validate the checked-in registry metadata.
 
 ## Official MCP Registry publication
 
@@ -34,8 +34,10 @@ Registry identity: **`io.github.BK927/overwatch-aio`**. The [official registry](
 
 1. Update the Python package version, refresh `uv.lock`, and run validation.
 2. Build the bundle and validate it. Copy the generated registry metadata to the repository's `server.json` before committing the release.
-3. Create a GitHub release tagged `v<version>` at that exact commit and upload the bundle and metadata. Keep already published artifacts unchanged.
-4. Log in with the official `mcp-publisher`, then publish `server.json`.
+3. Push the release commit and wait for its Linux, macOS, and Windows CI jobs to pass.
+4. Create and push an annotated `v<version>` tag at that exact commit. The tag-triggered release workflow rebuilds and verifies the four assets, creates a non-draft GitHub release, authenticates with GitHub OIDC, and publishes `server.json` with the pinned official `mcp-publisher`.
 5. Query the registry for the exact name and version; check that the package URL and hash match the release asset. Search index propagation can lag publication.
+
+The release workflow is safe to rerun after a registry-side transient failure: it never replaces an existing release. Instead, it downloads the published assets and byte-compares them with a deterministic rebuild before retrying publication. Keep every already published tag and asset immutable.
 
 Registry credentials belong in the publisher's credential storage, never in this repository. No PyPI upload is needed for this MCPB distribution path.

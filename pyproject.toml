@@ -1,9 +1,27 @@
 [project]
 name = "overwatch-aio-skill"
-version = "0.3.1"
-description = "On-demand Overwatch skill and optional MCP server with provenance and evidence management"
-keywords = ["overwatch", "mcp", "mcp-server", "model-context-protocol", "agent-skills", "codex"]
+version = "0.3.2"
+description = "Overwatch 2 data MCP server and agent skill for hero meta, player stats, replays, patch notes, and OWCS Korea with provenance."
+keywords = [
+  "overwatch",
+  "overwatch-2",
+  "ow2",
+  "hero-statistics",
+  "player-stats",
+  "replay-codes",
+  "patch-notes",
+  "owcs",
+  "esports",
+  "game-data",
+  "mcp",
+  "mcp-server",
+  "model-context-protocol",
+  "agent-skills",
+  "codex",
+  "sqlite",
+]
 readme = "README.md"
+authors = [{ name = "BK927" }]
 requires-python = ">=3.11"
 dependencies = ["httpx2>=2.12,<3", "pydantic>=2.12,<3", "beautifulsoup4>=4.13,<5"]
 
@@ -16,8 +34,10 @@ overwatch-aio-skill = "overwatch_skill.cli:main"
 overwatch-aio-mcp = "overwatch_skill.mcp_cli:main"
 
 [project.urls]
+Homepage = "https://github.com/BK927/overwatch-aio"
 Repository = "https://github.com/BK927/overwatch-aio"
 Documentation = "https://github.com/BK927/overwatch-aio#readme"
+Issues = "https://github.com/BK927/overwatch-aio/issues"
 
 [build-system]
 requires = ["hatchling"]

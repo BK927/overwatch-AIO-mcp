@@ -1,4 +1,4 @@
-# Overwatch AIO Skill & MCP 검증 기록
+# Overwatch 2 Data MCP Server & Agent Skill 검증 기록
 
 ## 0.3.0 병행 제공 — 2026-09-09 KST
 
@@ -10,7 +10,7 @@
 - 입력 오류, 비공개 프로필, 429·503, 파싱 실패, 빈 결과, 오래된 캐시, 부분·전체 비교 실패, 잘못된 출력에 대해 두 방식이 같은 결과 본문을 반환한다. `status=error`만 MCP 오류다.
 - Ruff 검사·포맷, Skill Creator 형식 검사, 스킬 메타데이터·참고 링크 검증을 통과했다. JSON/TOML 클라이언트 예제는 같은 실행 인수를 제공한다.
 - source distribution에 스킬 루트·참고 문서·잠금 파일·MCP 예제가 포함된다. wheel에는 두 실행 명령·공통 코드·SQLite DDL이 포함된다. MCP는 선택 의존성이며 사용자 DB·가상환경·캐시를 배포하지 않는다.
-- CI는 Windows/Linux × Python 3.11/3.13 × 스킬 단독/MCP 포함의 8개 조합으로 구성했다. 각 작업은 선택한 의존성 설치 여부를 확인하고 코드 검사·스킬 검증·전체 테스트·빌드를 실행한다. 원격 결과는 [GitHub Actions](https://github.com/BK927/overwatch-aio/actions/workflows/test.yml)에서 해당 커밋을 확인한다.
+- 0.3.0 당시 CI는 Windows/Linux × Python 3.11/3.13 × 스킬 단독/MCP 포함의 8개 조합이었다. 0.3.2부터 macOS를 추가해 같은 검사를 12개 조합으로 구성한다. 각 작업은 선택한 의존성 설치 여부를 확인하고 코드 검사·스킬 검증·전체 테스트·빌드를 실행한다. 원격 결과는 [GitHub Actions](https://github.com/BK927/overwatch-aio/actions/workflows/test.yml)에서 해당 커밋을 확인한다.
 
 외부 출처 어댑터는 이번 변경에서 재작성하지 않았다. 아래 0.2.0의 실제 출처 조회 기록은 당시 관측이며, 이번 실행의 최신 출처 검증 결과로 취급하지 않는다.
 
@@ -43,4 +43,4 @@ MCP 없이 새 CLI의 조회 경계에서 14개 사례를 별도로 실행했다
 
 ### CI와 확인 범위
 
-GitHub Actions는 Windows/Linux × Python 3.11/3.13의 동일 회귀 검사, 스킬 형식 검사, 패키지 빌드로 구성되어 있다. 원격 실행 결과는 해당 커밋의 Actions에서 확인한다. 게임 클라이언트 실제 재생·실시간 관전은 이 스킬의 기능이나 검증 범위에 포함되지 않는다.
+0.2.0 당시 GitHub Actions는 Windows/Linux × Python 3.11/3.13의 동일 회귀 검사, 스킬 형식 검사, 패키지 빌드로 구성되어 있었다. 원격 실행 결과는 해당 커밋의 Actions에서 확인한다. 게임 클라이언트 실제 재생·실시간 관전은 이 스킬의 기능이나 검증 범위에 포함되지 않는다.

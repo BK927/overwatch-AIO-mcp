@@ -1,12 +1,18 @@
-# Overwatch AIO — MCP Server & Agent Skill
+# Overwatch 2 Data MCP Server & Agent Skill — Hero Meta, Player Stats, Replays, Patch Notes & OWCS Korea
 
 **English** | [한국어](README.ko.md)
 
-An **Overwatch MCP server and standalone agent skill** for hero meta, public player statistics, evidenced rankers, replay codes, official patch notes, and OWCS Korea esports data. Both interfaces share ten queries, validation, and a SQLite store. Results preserve source URLs, observation dates, applied filters, and evidence.
+Query **Overwatch 2 hero meta, public player stats, evidenced rankers, replay codes, official patch notes, and OWCS Korea data** from an MCP client or a standalone agent skill. Both interfaces share ten read-only query operations and one SQLite store, with source URLs, observation dates, applied filters, cache state, and warnings preserved in every result.
 
-Built with **Python 3.11+ and uv**. Choose the skill, MCP, or both. Data is fetched on request; no scheduled collector is started.
+Use it to compare heroes by region and rank, inspect public BattleTag profiles, retrieve curated ranker/replay evidence, connect patch changes to the available data period, and keep ranked statistics separate from esports metrics. Data is fetched only when requested; there is no scheduled collector, game-client automation, or private-profile access.
+
+Built with **Python 3.11+ and uv**. Choose the skill, MCP server, or both.
 
 [Download releases](https://github.com/BK927/overwatch-aio/releases) · [Distribution and registry guide](docs/distribution.md)
+
+> The legacy `v0.3.1` MCPB keeps its original `Overwatch AIO MCP` display
+> label. Version `0.3.2` and later use the `Overwatch 2 Data MCP Server` label.
+> Published release assets remain immutable.
 
 ## Choose an interface
 
@@ -76,6 +82,21 @@ uv run --frozen --no-dev --extra mcp --project "<project-directory>" overwatch-a
 
 Keep `--extra mcp` in MCP launch commands and in `uv sync` commands for environments used by MCP. A plain `uv sync` can remove optional dependencies. The skill command stays unchanged.
 
+## Deployment
+
+| Environment | Status | Requirements and limits |
+|---|---|---|
+| Local desktop, stdio | Supported | Primary setup. The MCP client starts the process and the per-user SQLite database persists locally. |
+| Local desktop, Streamable HTTP | Supported | Keep the default loopback bind unless an authenticated gateway is already in place. The server itself has no authentication. |
+| Private home server | Operator-managed only | Use a service manager, one durable SQLite database, backups, and TLS plus authentication at a trusted reverse proxy or private network boundary. Do not expose the raw MCP port. |
+| Raspberry Pi 4 Model B (2 GB RAM) | Tested hardware only | This records the hardware used for testing; it is not a recommendation, minimum requirement, or performance guarantee. |
+| Google Compute Engine VM | Manual, unverified | A single VM with persistent disk can host the process, but no image or Terraform module is provided. Add TLS/auth, backups, single-writer DB ownership, and live upstream egress checks. |
+| Cloudflare Tunnel | Possible operator-managed ingress; unverified | Tunnel can sit in front of a home server or VM after authentication is designed and tested. It is only ingress to that running host, not a Cloudflare Workers runtime. |
+| Google Cloud Run | Unsupported as-is | Local SQLite is instance-local and the repository has no stateless container/storage design. External durable storage, authentication, and lifecycle changes are required. |
+| Cloudflare Workers | Unsupported as-is | The current CPython MCP SDK and local SQLite design are not a Worker deployment. A port needs a stateless HTTP handler, Worker-native storage, and Worker-compatible authentication. |
+
+Remote and home-server operation is only an operator deployment pattern—not a built-in hosted service. Binding to a non-loopback address is unsafe unless requests first pass through operator-controlled authentication and TLS and the database is stored durably.
+
 ## Available tools
 
 | Tool | Capability |
@@ -117,6 +138,28 @@ Existing caches, meta observations, players, replays, and manual evidence remain
 
 The repository is `BK927/overwatch-aio`; the Python distribution and skill remain `overwatch-aio-skill`. Existing skill commands work unchanged. Older MCP users can keep `overwatch-aio-mcp serve` after updating their path and adding `--extra mcp`. Point `--db` at the old `data/overwatch.db` explicitly if needed.
 
+## FAQ
+
+### Does `ASIA` mean the Korean server?
+
+No. `ASIA` is a provider region label, not proof of a Korean match server. OWTICS `KOREA` is also a provider grouping; results keep those labels distinct from evidenced player identity.
+
+### Does this provide a live Top 500 leaderboard?
+
+No. `ow_rankers_search` searches the locally curated registry and returns its recorded evidence. It does not claim complete, live Top 500 coverage.
+
+### Are returned replay codes guaranteed to work?
+
+No. A public code alone does not prove current playability. Playback state is reported only when an operator has registered evidence; this project does not launch or control Overwatch 2.
+
+### Does it collect data continuously or work fully offline?
+
+There is no scheduler. Refreshing queries contact their public sources on demand. Stored observations, curated evidence, and compatible cached/status queries remain available according to each operation's offline behavior, but cannot become fresher while offline.
+
+### Can it read private profiles or be exposed as a public MCP service?
+
+It does not bypass private profiles. Public hosting is not turnkey: the current HTTP server has no built-in auth, so an operator must provide TLS, authentication, durable storage, access controls, and backups.
+
 ## Sources and limits
 
 Sources include **OverFast, Blizzard hero statistics and patch notes, OWTICS, OWReplays, and OWCS Korea releases**. Requests to these services can include query filters and public player identifiers needed for the selected operation.
@@ -127,6 +170,8 @@ Sources include **OverFast, Blizzard hero statistics and patch notes, OWTICS, OW
 - Private profiles are not accessed. Missing statistics and explicit privacy are distinguished.
 - Hero rates use percentages from 0–100. No invented matchup win rates. Esports metrics stay separate from ranked statistics.
 - Source changes, rate limits, and parsing failures remain visible. Public refreshes do not overwrite manual identity or playback evidence.
+
+This is an unofficial community project and is not affiliated with or endorsed by Blizzard Entertainment. Overwatch and related marks belong to their respective owners.
 
 ## Development and verification
 

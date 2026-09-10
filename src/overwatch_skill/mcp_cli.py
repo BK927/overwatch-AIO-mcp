@@ -10,7 +10,7 @@ from .execution import schemas
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Overwatch AIO MCP query server")
+    parser = argparse.ArgumentParser(description="Overwatch 2 Data MCP query server")
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     parser.add_argument("--db", help="SQLite path (then OW_DB_PATH, then per-user default)")
     sub = parser.add_subparsers(dest="command")

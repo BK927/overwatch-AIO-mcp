@@ -19,6 +19,8 @@ spec.loader.exec_module(builder)
 def test_bundle_contains_only_runtime_sources_and_matching_hash(tmp_path):
     bundle, metadata = builder.build(ROOT, tmp_path)
     registry = json.loads(metadata.read_text())
+    checked_in_registry = json.loads((ROOT / "server.json").read_text())
+    assert checked_in_registry == registry
     assert registry["packages"][0]["fileSha256"] == hashlib.sha256(bundle.read_bytes()).hexdigest()
     with ZipFile(bundle) as archive:
         names = set(archive.namelist())
@@ -36,10 +38,21 @@ def test_bundle_contains_only_runtime_sources_and_matching_hash(tmp_path):
         )
         manifest = json.loads(archive.read("manifest.json"))
         assert manifest["version"] == registry["version"]
+        assert set(manifest["compatibility"]["platforms"]) == {"win32", "darwin", "linux"}
         assert {tool["name"] for tool in manifest["tools"]} == set(
             json.loads((ROOT / "docs/query-schemas.json").read_text())
         )
         assert manifest["server"]["entry_point"] in names
+
+
+def test_bundle_is_reproducible_with_lf_text(tmp_path):
+    first, _ = builder.build(ROOT, tmp_path / "first")
+    second, _ = builder.build(ROOT, tmp_path / "second")
+    assert first.read_bytes() == second.read_bytes()
+
+    with ZipFile(first) as archive:
+        for name in archive.namelist():
+            assert b"\r" not in archive.read(name), name
 
 
 def test_extracted_bundle_runs_its_declared_mcp_command(tmp_path):

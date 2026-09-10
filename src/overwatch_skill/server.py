@@ -68,7 +68,7 @@ def create_server(service: Service | None = None, db_path: str | None = None) ->
         return await call_next(ctx)
 
     server = ValidatedMCPServer(
-        "Overwatch AIO MCP",
+        "Overwatch 2 Data MCP Server",
         version=__version__,
         lifespan=lifespan,
         middleware=[dispatch],

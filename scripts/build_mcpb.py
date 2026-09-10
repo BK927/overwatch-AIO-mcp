@@ -5,16 +5,21 @@ import hashlib
 import json
 import tomllib
 from pathlib import Path
-from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
+from zipfile import ZIP_STORED, ZipFile, ZipInfo
 
 REPOSITORY = "https://github.com/BK927/overwatch-aio"
 REGISTRY_NAME = "io.github.BK927/overwatch-aio"
 
 
+def normalized_text_bytes(path: Path) -> bytes:
+    """Return platform-independent text bytes for a reproducible MCPB."""
+    return path.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+
+
 def bundle_files(root: Path) -> dict[str, bytes]:
     # Explicit distribution boundary: never sweep a checkout, home, DB or virtualenv.
     files = {
-        name: (root / name).read_bytes()
+        name: normalized_text_bytes(root / name)
         for name in (
             "pyproject.toml",
             "uv.lock",
@@ -27,11 +32,11 @@ def bundle_files(root: Path) -> dict[str, bytes]:
     }
     for suffix in ("*.py", "*.sql"):
         for path in sorted((root / "src/overwatch_skill").rglob(suffix)):
-            files[path.relative_to(root).as_posix()] = path.read_bytes()
+            files[path.relative_to(root).as_posix()] = normalized_text_bytes(path)
     for directory in ("docs", "references", "examples", "agents"):
         for path in sorted((root / directory).iterdir()):
             if path.is_file() and path.suffix in (".md", ".json", ".toml", ".yaml"):
-                files[path.relative_to(root).as_posix()] = path.read_bytes()
+                files[path.relative_to(root).as_posix()] = normalized_text_bytes(path)
     files["mcp_entry.py"] = (
         b'"""MCPB entrypoint; dependencies are prepared by the UV runtime."""\n'
         b"from overwatch_skill.mcp_cli import main\n\n"
@@ -47,9 +52,9 @@ def build(root: Path, output: Path) -> tuple[Path, Path]:
     manifest = {
         "manifest_version": "0.4",
         "name": "overwatch-aio",
-        "display_name": "Overwatch AIO MCP",
+        "display_name": "Overwatch 2 Data MCP Server",
         "version": version,
-        "description": "Overwatch hero meta, player statistics, replays, patches and OWCS Korea with sources and evidence.",
+        "description": "Overwatch 2 MCP for hero meta, public player stats, replays, patch notes, and OWCS Korea.",
         "author": {"name": "BK927", "url": "https://github.com/BK927"},
         "repository": {"type": "git", "url": REPOSITORY},
         "homepage": REPOSITORY,
@@ -76,23 +81,30 @@ def build(root: Path, output: Path) -> tuple[Path, Path]:
         "tools": [
             {"name": name, "description": value["description"]} for name, value in queries.items()
         ],
-        "compatibility": {"platforms": ["win32", "linux"], "runtimes": {"python": ">=3.11"}},
+        "compatibility": {
+            "platforms": ["win32", "darwin", "linux"],
+            "runtimes": {"python": ">=3.11"},
+        },
         "keywords": project["keywords"],
     }
     files = bundle_files(root)
     files["manifest.json"] = (json.dumps(manifest, ensure_ascii=False, indent=2) + "\n").encode()
     output.mkdir(parents=True, exist_ok=True)
     bundle = output / f"overwatch-aio-{version}.mcpb"
-    with ZipFile(bundle, "w", compression=ZIP_DEFLATED) as archive:
+    # Stored entries plus fixed metadata make the bundle identical across zlib
+    # versions and operating systems. The source-only bundle is small enough
+    # that cross-platform reproducibility is more valuable than compression.
+    with ZipFile(bundle, "w", compression=ZIP_STORED) as archive:
         for name, content in sorted(files.items()):
             info = ZipInfo(name, date_time=(1980, 1, 1, 0, 0, 0))
-            info.compress_type = ZIP_DEFLATED
+            info.compress_type = ZIP_STORED
+            info.create_system = 3
             info.external_attr = 0o100644 << 16
             archive.writestr(info, content)
     registry = {
         "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
         "name": REGISTRY_NAME,
-        "title": "Overwatch AIO MCP",
+        "title": "Overwatch 2 Data MCP Server",
         "description": manifest["description"],
         "repository": {"url": REPOSITORY, "source": "github"},
         "version": version,
